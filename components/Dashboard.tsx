@@ -9,7 +9,7 @@ interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
-const PROFE_JEMI_REAL = "./profe_jemi.jpg";
+const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 // Sugerencias personalizadas según nivel
 const SUGGESTIONS: Record<string, { icon: string; title: string; desc: string; action: string; view: string }[]> = {

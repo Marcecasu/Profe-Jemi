@@ -12,7 +12,7 @@ interface LayoutProps {
 }
 
 // IMPORTANTE: Ruta local a la imagen real de la Profe Jemi
-const PROFE_JEMI_REAL = "./profe_jemi.jpg";
+const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView, isAdmin }) => {
   const { signOut } = useAuth();

@@ -7,7 +7,7 @@ interface OnboardingProps {
 }
 
 // IMPORTANTE: Ruta local a la imagen real de la Profe Jemi
-const PROFE_JEMI_REAL = "./profe_jemi.jpg";
+const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 const COMMON_LANGUAGES = [
   'Inglés 🇺🇸', 'Español 🇪🇸', 'Portugués 🇧🇷', 'Francés 🇫🇷', 'Alemán 🇩🇪', 'Italiano 🇮🇹'

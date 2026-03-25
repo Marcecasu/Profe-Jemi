@@ -9,7 +9,7 @@ interface ImageAnalyzerProps {
 }
 
 // IMPORTANTE: Ruta local a la imagen real de la Profe Jemi
-const PROFE_JEMI_REAL = "./profe_jemi.jpg";
+const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
