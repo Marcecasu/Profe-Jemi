@@ -1,0 +1,8 @@
+{
+  "name": "Profe Jemi - Tu Profesora de Español AI",
+  "description": "Una plataforma avanzada de aprendizaje de español (ELE) con IA para niveles Básico, Intermedio y Avanzado, incluyendo práctica de voz y gramática.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
