@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { getTutorResponse, analyzeGrammar, generateLessonImage, generateSpeech } from '../services/gemini';
+import { getTutorResponse, analyzeGrammar, generateSpeech } from '../services/gemini';
 import { ChatMessage, Lesson, User } from '../types';
 
 interface LessonInterfaceProps {
@@ -40,7 +40,6 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lessonImage, setLessonImage] = useState<string | null>(null);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [playingAudioKey, setPlayingAudioKey] = useState<string | null>(null);
   const [loadingAudioKey, setLoadingAudioKey] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
@@ -209,11 +208,7 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
       <div className="flex-grow overflow-y-auto bg-gray-50 pb-12">
         {/* Imagen Generada Representativa */}
         <div className="w-full px-4 pt-4 md:px-6 md:pt-6">
-          {isGeneratingImage ? (
-            <div className="w-full h-48 md:h-64 bg-gray-200 rounded-2xl animate-pulse flex items-center justify-center">
-              <span className="text-gray-400 font-bold">🎨 Creando ilustración...</span>
-            </div>
-          ) : lessonImage && (
+          {lessonImage && (
             <div className="relative group">
               <img src={lessonImage} alt="Contexto de la lección" className="w-full h-48 md:h-64 object-cover rounded-2xl shadow-lg border-2 border-white" />
               <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-md">
