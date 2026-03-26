@@ -315,13 +315,45 @@ const MainApp: React.FC = () => {
   // Interceptar navegación para bloquear herramientas si no tiene acceso
   const handleNavigate = (view: string) => {
     if (!hasAccess && !['home', 'profile'].includes(view)) {
+      window.history.pushState(null, '', '#home');
       setCurrentView('home');
       setShowPaywallAlert(true);
       setTimeout(() => setShowPaywallAlert(false), 5000); // Ocultar alerta después de 5s
       return;
     }
+    window.history.pushState(null, '', `#${view}`);
     setCurrentView(view);
+    setActiveLesson(null);
   };
+
+  // Sincronizar historial del navegador con el estado de la aplicación
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.replace('#', '') || 'home';
+      if (hash.startsWith('lesson-')) {
+        const lessonId = hash.replace('lesson-', '');
+        const lesson = LESSONS.find(l => l.id === lessonId);
+        if (lesson) {
+          setActiveLesson(lesson);
+          setCurrentView('courses');
+        } else {
+          setActiveLesson(null);
+          setCurrentView('home');
+        }
+      } else {
+        setActiveLesson(null);
+        setCurrentView(hash);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    if (!window.location.hash) {
+      window.history.replaceState(null, '', '#home');
+    } else {
+      handlePopState();
+    }
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // Sync with local storage for existing session persistence logic
@@ -411,7 +443,11 @@ const MainApp: React.FC = () => {
     const handleNavFromLesson = (view: string) => { setActiveLesson(null); handleNavigate(view); };
     return (
       <Layout user={user} currentView="courses" onNavigate={handleNavFromLesson} isAdmin={isAdmin}>
-        <LessonInterface lesson={activeLesson} user={user} onExit={() => setActiveLesson(null)} onComplete={() => markLessonComplete(activeLesson.id)} onNextLesson={hasNextLesson ? () => setActiveLesson(LESSONS[currentIndex + 1]) : undefined} />
+        <LessonInterface lesson={activeLesson} user={user} onExit={() => { window.history.pushState(null, '', '#courses'); setActiveLesson(null); }} onComplete={() => markLessonComplete(activeLesson.id)} onNextLesson={hasNextLesson ? () => {
+          const nextLesson = LESSONS[currentIndex + 1];
+          window.history.pushState(null, '', `#lesson-${nextLesson.id}`);
+          setActiveLesson(nextLesson);
+        } : undefined} />
       </Layout>
     );
   }
@@ -458,7 +494,7 @@ const MainApp: React.FC = () => {
                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-2">{cat}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {userLessons.filter(l => (l.category || 'General') === cat).map(lesson => (
-                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => setActiveLesson(lesson)} />
+                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => { window.history.pushState(null, '', `#lesson-${lesson.id}`); setActiveLesson(lesson); }} />
                       ))}
                     </div>
                   </div>
@@ -477,7 +513,7 @@ const MainApp: React.FC = () => {
                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-2">{cat}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {userLessons.filter(l => l.category === cat).map(lesson => (
-                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => setActiveLesson(lesson)} />
+                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => { window.history.pushState(null, '', `#lesson-${lesson.id}`); setActiveLesson(lesson); }} />
                       ))}
                     </div>
                   </div>

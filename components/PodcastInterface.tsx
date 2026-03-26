@@ -27,6 +27,14 @@ const FALLBACK_PODCASTS: Podcast[] = [
         category: 'Trabajo',
         audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_trabajo_oficina.mp3',
         duration: 'Básico'
+    },
+    {
+        id: '4',
+        title: 'Cultura: Curiosidades y Costumbres (PT)',
+        description: 'Sumérgete en la cultura hispanohablante y descubre sus costumbres más interesantes.',
+        category: 'Cultura',
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_cultura_pt.mp3',
+        duration: 'Básico'
     }
 ];
 
