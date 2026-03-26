@@ -61,7 +61,11 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
                 onClick={() => setShowMenu(!showMenu)}
                 className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center border-2 border-red-500 overflow-hidden hover:scale-105 transition-transform shadow-sm aspect-square"
               >
-                <img src={`https://picsum.photos/seed/${user.name}/100/100`} alt="Profile" />
+                {user.avatar ? (
+                  <span className="text-xl">{user.avatar}</span>
+                ) : (
+                  <span className="text-xl">😎</span>
+                )}
               </button>
 
               {/* Dropdown Menu */}

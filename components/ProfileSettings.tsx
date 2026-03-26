@@ -22,10 +22,13 @@ const LEVELS: SpanishLevel[] = [
   SpanishLevel.ADVANCED
 ];
 
+const AVATARS = ['🤪', '😎', '👻', '👽', '🤖', '🦁', '🐸', '🦊', '🥑', '🌮', '🎭', '🎸'];
+
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUpdateUser }) => {
   const [name, setName] = useState(user.name);
   const [level, setLevel] = useState<SpanishLevel>(user.level);
   const [accent, setAccent] = useState<SpanishAccent>(user.accent);
+  const [avatar, setAvatar] = useState<string>(user.avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)]);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -34,7 +37,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUpdateUser })
     setSaving(true);
     setSuccess(false);
 
-    const updatedData = { name, level, accent };
+    const updatedData = { name, level, accent, avatar };
 
     // Actualizar estado global y local storage
     onUpdateUser(updatedData);
@@ -57,20 +60,41 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUpdateUser })
       <div className="bg-white rounded-[2rem] shadow-xl p-8 border border-gray-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-bl-full -z-10 opacity-50"></div>
         
-        <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-red-100 border-2 border-red-500 flex shrink-0">
-                <img src={`https://picsum.photos/seed/${user.name}/100/100`} alt="Profile" className="w-full h-full object-cover" />
+        <div className="flex items-center gap-4 mb-2">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-red-100 border-4 border-red-500 flex shrink-0 items-center justify-center text-4xl shadow-md">
+                {avatar}
             </div>
             <div>
                 <h2 className="text-3xl font-outfit font-bold text-gray-900">Tu Perfil ⚙️</h2>
-                <p className="text-gray-500">Ajusta tus preferencias de aprendizaje en cualquier momento.</p>
+                <p className="text-gray-500">Puedes cambiar tu avatar y preferencias de aprendizaje cuando quieras.</p>
             </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-6">
+        <form onSubmit={handleSave} className="space-y-6 mt-8">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Tu Nombre</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Elige un Avatar Gracioso</label>
+            <div className="flex flex-wrap gap-2">
+              {AVATARS.map(img => (
+                <button
+                  key={img}
+                  type="button"
+                  onClick={() => setAvatar(img)}
+                  className={`w-12 h-12 text-2xl flex items-center justify-center rounded-xl transition-all ${
+                    avatar === img
+                      ? 'bg-red-500 shadow-md scale-110'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  {img}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="name-input" className="block text-sm font-bold text-gray-700 mb-2">Tu Nombre</label>
             <input
+              id="name-input"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -100,8 +124,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUpdateUser })
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Acento a Practicar</label>
+            <label htmlFor="accent-select" className="block text-sm font-bold text-gray-700 mb-2">Acento a Practicar</label>
             <select
+              id="accent-select"
               value={accent}
               onChange={(e) => setAccent(e.target.value as SpanishAccent)}
               className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all font-medium bg-white appearance-none"

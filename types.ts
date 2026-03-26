@@ -22,6 +22,7 @@ export interface User {
   gender: UserGender;
   accent: SpanishAccent;
   progress: number;
+  avatar?: string;
   nativeLanguage?: string;
   country?: string;
   hasCompletedOnboarding: boolean;
