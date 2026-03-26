@@ -184,6 +184,22 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
     return '🏳️';
   };
 
+  const getLoadingMessage = (nativeLanguage?: string, isGeneratingLesson: boolean = true) => {
+    const lang = nativeLanguage?.toLowerCase() || 'español';
+    const isPT = ['portugués', 'português', 'portuguese', 'pt'].includes(lang);
+    const isEN = ['inglés', 'ingles', 'english', 'en'].includes(lang);
+    
+    if (isGeneratingLesson) {
+      if (isPT) return 'Aguarde um momento, uma lição personalizada com IA está sendo gerada para você... ✨';
+      if (isEN) return 'Please wait a moment, a personalized AI lesson is being generated for you... ✨';
+      return 'Aguarda un momento, una lección personalizada con IA se está generando para ti... ✨';
+    } else {
+      if (isPT) return 'A professora Jemi está analisando e formulando uma resposta... ✍️';
+      if (isEN) return 'Teacher Jemi is analyzing and typing a response... ✍️';
+      return 'La profe Jemi está analizando y escribiendo... ✍️';
+    }
+  };
+
   if (isFinished) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] max-w-5xl mx-auto w-full bg-white p-8 text-center animate-in zoom-in duration-500">
@@ -265,6 +281,25 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
               </div>
             );
           })}
+          
+          {isLoading && (
+            <div className="flex items-start space-x-3 flex-row animate-in fade-in duration-300">
+               <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-200 aspect-square shadow-sm opacity-80">
+                 <img src={PROFE_JEMI_REAL} alt="Jemi" className="w-full h-full object-cover" />
+               </div>
+               <div className="max-w-[85%] space-y-4">
+                 <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 text-gray-800 rounded-2xl rounded-tl-none p-4 shadow-sm relative overflow-hidden">
+                   <div className="absolute inset-0 bg-white/40 animate-pulse"></div>
+                   <p className="text-sm font-medium text-red-900 relative z-10 flex items-center gap-2">
+                     <span className="animate-spin inline-block">⏳</span>
+                     {getLoadingMessage(user.nativeLanguage, messages.length === 0)}
+                   </p>
+                 </div>
+               </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
         </div>
       </div>
       <form onSubmit={handleSend} className="p-4 bg-white border-t flex space-x-3"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Responde en español...`} className="flex-grow border rounded-2xl px-6 py-4" /><button type="submit" disabled={isLoading} className="bg-red-500 text-white rounded-2xl px-8 py-4 font-bold">Enviar</button></form>
