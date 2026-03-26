@@ -15,25 +15,23 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
     const handleSubscribe = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/create-checkout-session`, {
+            const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
                     userId: user?.id,
-                    userEmail: user?.email,
+                    email: user?.email,
                 }),
             });
 
             const data = await response.json();
-            if (data.sessionId) {
+            if (data.url) {
                 // Redirigir a Stripe Checkout
-                const stripe = (window as any).Stripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-                await stripe.redirectToCheckout({ sessionId: data.sessionId });
+                window.location.href = data.url;
             } else {
-                console.error('Error creating session:', data.error);
+                console.error('Error creating session:', data.message);
                 alert('Error al iniciar el pago. Por favor intenta de nuevo.');
             }
         } catch (error) {
