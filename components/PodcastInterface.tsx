@@ -6,19 +6,19 @@ import { supabase } from '../services/supabase';
 const FALLBACK_PODCASTS: Podcast[] = [
     {
         id: '1',
-        title: 'El Día en la Oficina (Ejemplo)',
-        description: 'Vocabulario esencial para tu primer día de trabajo en una empresa hispanohablante.',
-        category: 'Trabajo',
-        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-        duration: '03:45'
+        title: 'Saludos, Presentaciones y Profesiones (PT)',
+        description: 'Vocabulario esencial para empezar a presentarte y hablar de tu profesión.',
+        category: 'Estudio',
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_saludos_presentaciones_profesiones_basico_pt.mp3',
+        duration: 'Básico'
     },
     {
         id: '2',
-        title: 'Turismo en Madrid (Ejemplo)',
-        description: 'Cómo pedir un taxi, preguntar direcciones y disfrutar del centro.',
+        title: 'Guía de Turismo (PT)',
+        description: 'Vocabulario práctico para desenvolverse de viaje y hacer turismo.',
         category: 'Turismo',
-        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-        duration: '05:12'
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_turismo_pt.mp3',
+        duration: 'Básico'
     }
 ];
 
