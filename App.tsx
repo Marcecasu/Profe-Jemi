@@ -16,6 +16,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { supabase } from './services/supabase';
 import { User, SpanishLevel, Lesson } from './types';
 
 const LESSONS: Lesson[] = [
@@ -314,28 +315,59 @@ const MainApp: React.FC = () => {
   // Effect to sync Auth User with App User state if needed
   useEffect(() => {
     if (authUser && !user) {
-      // Here we would fetch the user profile from Supabase 'profiles' table using authUser.id
-      // For now, we rely on local state or create a default profile on the fly if missing in local storage
-      // This part needs to be expanded with 'profiles' table integration in next steps.
-      // For this step, we keep the existing flow working.
+      // Intentar recuperar el perfil de user_metadata de Supabase Auth
+      if (authUser.user_metadata?.hasCompletedOnboarding) {
+        const recoveredUser: User = {
+          name: authUser.user_metadata.name,
+          level: authUser.user_metadata.level,
+          gender: authUser.user_metadata.gender,
+          accent: authUser.user_metadata.accent,
+          nativeLanguage: authUser.user_metadata.nativeLanguage,
+          learningGoal: authUser.user_metadata.learningGoal,
+          progress: authUser.user_metadata.progress || 0,
+          isSubscribed: false,
+          hasCompletedOnboarding: true
+        };
+        setUser(recoveredUser);
+        localStorage.setItem('profe_jemi_user', JSON.stringify(recoveredUser));
+      }
     }
   }, [authUser, user]);
 
 
-  const handleLevelChange = (level: SpanishLevel) => {
+  const handleLevelChange = async (level: SpanishLevel) => {
     if (!user) return;
     const updatedUser = { ...user, level };
     setUser(updatedUser);
     localStorage.setItem('profe_jemi_user', JSON.stringify(updatedUser));
+    if (authUser) {
+      await supabase.auth.updateUser({ data: { level } });
+    }
   };
 
-  const handleOnboardingComplete = (userData: Partial<User>) => {
+  const handleOnboardingComplete = async (userData: Partial<User>) => {
     const newUser = userData as User;
     setUser(newUser);
     localStorage.setItem('profe_jemi_user', JSON.stringify(newUser));
+
+    // Guardar los datos en Supabase para que no se pierdan al cerrar sesión
+    if (authUser) {
+      await supabase.auth.updateUser({
+        data: {
+          name: newUser.name,
+          level: newUser.level,
+          gender: newUser.gender,
+          accent: newUser.accent,
+          nativeLanguage: newUser.nativeLanguage,
+          learningGoal: newUser.learningGoal,
+          progress: newUser.progress || 0,
+          hasCompletedOnboarding: true
+        }
+      });
+    }
   };
 
-  const markLessonComplete = (lessonId: string) => {
+  const markLessonComplete = async (lessonId: string) => {
     const newCompleted = [...new Set([...completedLessonIds, lessonId])];
     setCompletedLessonIds(newCompleted);
     localStorage.setItem('profe_jemi_completed_lessons', JSON.stringify(newCompleted));
@@ -344,6 +376,9 @@ const MainApp: React.FC = () => {
       const updatedUser = { ...user, progress };
       setUser(updatedUser);
       localStorage.setItem('profe_jemi_user', JSON.stringify(updatedUser));
+      if (authUser) {
+        await supabase.auth.updateUser({ data: { progress } });
+      }
     }
   };
 
