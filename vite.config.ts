@@ -31,6 +31,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}'],
+        cleanupOutdatedCaches: true,
         // Excluir la carpeta /api/ para que no use cache en el checkout
         navigateFallbackDenylist: [/^\/api/]
       }
