@@ -8,7 +8,7 @@ const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
 const stripe = new Stripe(stripeUrl, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2025-02-24.acacia' as any,
 });
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
