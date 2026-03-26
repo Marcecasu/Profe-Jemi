@@ -9,6 +9,7 @@ import Onboarding from './components/Onboarding';
 import LessonInterface from './components/LessonInterface';
 import PodcastInterface from './components/PodcastInterface';
 import ImageAnalyzer from './components/ImageAnalyzer';
+import ProfileSettings from './components/ProfileSettings';
 import Login from './components/Auth/Login';
 import SignUp from './components/Auth/SignUp';
 import ResetPassword from './components/Auth/ResetPassword';
@@ -398,6 +399,13 @@ const MainApp: React.FC = () => {
   return (
     <Layout user={user} currentView={currentView} onNavigate={setCurrentView} isAdmin={isAdmin}>
       {currentView === 'home' && <Dashboard user={user} onLevelChange={handleLevelChange} onNavigate={setCurrentView} />}
+      {currentView === 'profile' && (
+        <ProfileSettings user={user} onUpdateUser={(updated) => {
+          const newUser = { ...user, ...updated };
+          setUser(newUser);
+          localStorage.setItem('profe_jemi_user', JSON.stringify(newUser));
+        }} />
+      )}
       {currentView === 'chat' && <ChatInterface user={user} />}
       {currentView === 'vision' && <ImageAnalyzer user={user} onNavigate={setCurrentView} />}
       {currentView === 'voice' && <LiveConversation level={user.level} nativeLanguage={user.nativeLanguage || 'Inglés'} accent={user.accent || 'Español de España'} />}

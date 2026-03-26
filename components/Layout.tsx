@@ -74,6 +74,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
                       <p className="text-xs text-gray-400">{user.level} • {user.accent}</p>
                     </div>
                     <button
+                      onClick={() => { setShowMenu(false); onNavigate('profile'); }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold transition-colors flex items-center gap-2 border-b border-gray-50"
+                    >
+                      ⚙️ Mi Perfil
+                    </button>
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center gap-2"
                     >
