@@ -2,6 +2,7 @@
 import React from 'react';
 import { User, SpanishLevel } from '../types';
 import PricingModal from './Subscription/PricingModal';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
   user: User;
@@ -41,10 +42,10 @@ const TOOLS = [
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
   const [showPricing, setShowPricing] = React.useState(false);
+  const { profile, isAdmin } = useAuth();
 
-  // Safe access - these fields may not exist on the User type from localStorage
-  const isPremium = (user as any).subscription_status === 'active' || (user as any).role === 'admin';
-  const trialEndsAt = (user as any).trial_ends_at;
+  const isPremium = profile?.subscription_status === 'active' || isAdmin;
+  const trialEndsAt = profile?.trial_ends_at;
   const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 14;
 
   // Scoring system based on user data
@@ -59,7 +60,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
 
   // Determine greeting based on time of day
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? '¡Buenos días' : hour < 18 ? '¡Buenas tardes' : '¡Buenas noches';
+  let greeting = '¡Buenos días';
+  if (hour >= 19 || hour < 5) greeting = '¡Buenas noches';
+  else if (hour >= 12 && hour < 19) greeting = '¡Buenas tardes';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full text-gray-900">
