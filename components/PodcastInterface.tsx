@@ -19,6 +19,14 @@ const FALLBACK_PODCASTS: Podcast[] = [
         category: 'Turismo',
         audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_turismo_pt.mp3',
         duration: 'Básico'
+    },
+    {
+        id: '3',
+        title: 'Trabajo y Oficina (PT)',
+        description: 'Aprende frases útiles para desenvolverte con éxito en tu ambiente laboral.',
+        category: 'Trabajo',
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_trabajo_oficina.mp3',
+        duration: 'Básico'
     }
 ];
 
