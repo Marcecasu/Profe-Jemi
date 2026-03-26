@@ -69,7 +69,7 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
         if (cat.includes('Alquiler')) presetImage = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800';
         else if (cat.includes('Supermercado')) presetImage = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800';
         else if (cat.includes('Oficial') || cat.includes('Finanzas') || cat.includes('Derecho')) presetImage = 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=800';
-        else if (cat.includes('Hogar')) presetImage = 'https://images.unsplash.com/photo-1556020685-e63193364161?auto=format&fit=crop&q=80&w=800';
+        else if (cat.includes('Hogar')) presetImage = 'https://images.unsplash.com/photo-1581141849291-1125c7b692b5?auto=format&fit=crop&q=80&w=800';
         else if (cat.includes('Salud') || cat.includes('Medicina')) presetImage = 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&q=80&w=800';
         else if (cat.includes('Tiempo Libre') || cat.includes('Debates')) presetImage = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=800';
         else if (cat.includes('Servicios') || cat.includes('Transporte')) presetImage = 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800';
@@ -226,7 +226,15 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
         <div className="w-full px-4 pt-4 md:px-6 md:pt-6">
           {lessonImage && (
             <div className="relative group">
-              <img src={lessonImage} alt="Contexto de la lección" className="w-full h-48 md:h-64 object-cover rounded-2xl shadow-lg border-2 border-white" />
+              <img 
+                src={lessonImage} 
+                alt="Contexto de la lección" 
+                className="w-full h-48 md:h-64 object-cover rounded-2xl shadow-lg border-2 border-white" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = 'none';
+                }}
+              />
               <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-md">
                 Generada por IA ✨
               </div>
