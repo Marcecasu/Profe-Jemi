@@ -56,7 +56,7 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="p-8">
                     <div className="flex justify-center items-end mb-8">
-                        <span className="text-5xl font-bold text-gray-900">$12.97</span>
+                        <span className="text-5xl font-bold text-gray-900">R$ 24,97</span>
                         <span className="text-gray-500 mb-2 ml-1">/ mes</span>
                     </div>
 
