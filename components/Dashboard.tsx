@@ -36,6 +36,7 @@ const TOOLS = [
   { id: 'voice', icon: '🎙️', name: 'Live', desc: 'Conversación en vivo' },
   { id: 'vision', icon: '📸', name: 'Vision', desc: 'Analizar imágenes' },
   { id: 'courses', icon: '📚', name: 'Cursos', desc: 'Lecciones guiadas' },
+  { id: 'podcasts', icon: '🎧', name: 'Podcasts', desc: 'Aprende escuchando' },
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
@@ -179,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
       {/* Quick Access Tools */}
       <div className="mb-8">
         <h3 className="text-lg font-outfit font-bold text-gray-800 mb-4">Herramientas 🛠️</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {TOOLS.map(tool => (
             <button
               key={tool.id}
