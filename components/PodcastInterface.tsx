@@ -35,6 +35,14 @@ const FALLBACK_PODCASTS: Podcast[] = [
         category: 'Cultura',
         audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_cultura_pt.mp3',
         duration: 'Básico'
+    },
+    {
+        id: '5',
+        title: 'Culinaria y Gastronomía (PT)',
+        description: 'Descubre los sabores latinos y aprende el vocabulario para restaurantes y comidas.',
+        category: 'Culinaria',
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_culinaria_pt.mp3',
+        duration: 'Básico'
     }
 ];
 
