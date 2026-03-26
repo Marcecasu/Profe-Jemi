@@ -152,11 +152,13 @@ const SignUp: React.FC = () => {
                     {error && <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-100">{error}</div>}
 
                     <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="language-select" className="sr-only">{t.nativeLangLabel}</label>
+                        <div className="bg-white px-3 py-3 border border-gray-300 rounded-t-md">
+                            <label htmlFor="language-select" className="block text-sm font-bold text-gray-700 mb-2">
+                                🌍 {t.nativeLangLabel}:
+                            </label>
                             <select
                                 id="language-select"
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm bg-white"
+                                className="appearance-none block w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm bg-gray-50"
                                 value={nativeLanguage}
                                 onChange={(e) => setNativeLanguage(e.target.value)}
                             >
@@ -173,7 +175,7 @@ const SignUp: React.FC = () => {
                                 id="email-address"
                                 type="email"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                                 placeholder={t.emailPlaceholder}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -185,7 +187,7 @@ const SignUp: React.FC = () => {
                                 id="password"
                                 type="password"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                                 placeholder={t.passwordPlaceholder}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
