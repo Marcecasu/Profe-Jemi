@@ -299,11 +299,29 @@ const LESSONS: Lesson[] = [
 ];
 
 const MainApp: React.FC = () => {
-  const { user: authUser, isAdmin } = useAuth();
+  const { user: authUser, profile, isAdmin } = useAuth();
   const [currentView, setCurrentView] = useState('home');
   const [user, setUser] = useState<User | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+  const [showPaywallAlert, setShowPaywallAlert] = useState(false);
+
+  // Determinar si tiene acceso (Premium o en Trial)
+  const isPremium = profile?.subscription_status === 'active' || isAdmin;
+  const trialEndsAt = profile?.trial_ends_at;
+  const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 14;
+  const hasAccess = isPremium || daysLeft > 0;
+
+  // Interceptar navegación para bloquear herramientas si no tiene acceso
+  const handleNavigate = (view: string) => {
+    if (!hasAccess && !['home', 'profile'].includes(view)) {
+      setCurrentView('home');
+      setShowPaywallAlert(true);
+      setTimeout(() => setShowPaywallAlert(false), 5000); // Ocultar alerta después de 5s
+      return;
+    }
+    setCurrentView(view);
+  };
 
   useEffect(() => {
     // Sync with local storage for existing session persistence logic
@@ -390,7 +408,7 @@ const MainApp: React.FC = () => {
   if (activeLesson) {
     const currentIndex = LESSONS.findIndex(l => l.id === activeLesson.id);
     const hasNextLesson = currentIndex !== -1 && currentIndex < LESSONS.length - 1;
-    const handleNavFromLesson = (view: string) => { setActiveLesson(null); setCurrentView(view); };
+    const handleNavFromLesson = (view: string) => { setActiveLesson(null); handleNavigate(view); };
     return (
       <Layout user={user} currentView="courses" onNavigate={handleNavFromLesson} isAdmin={isAdmin}>
         <LessonInterface lesson={activeLesson} user={user} onExit={() => setActiveLesson(null)} onComplete={() => markLessonComplete(activeLesson.id)} onNextLesson={hasNextLesson ? () => setActiveLesson(LESSONS[currentIndex + 1]) : undefined} />
@@ -399,8 +417,18 @@ const MainApp: React.FC = () => {
   }
 
   return (
-    <Layout user={user} currentView={currentView} onNavigate={setCurrentView} isAdmin={isAdmin}>
-      {currentView === 'home' && <Dashboard user={user} onLevelChange={handleLevelChange} onNavigate={setCurrentView} />}
+    <Layout user={user} currentView={currentView} onNavigate={handleNavigate} isAdmin={isAdmin}>
+      {/* Alerta de acceso denegado (Paywall) */}
+      {showPaywallAlert && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className="bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-3 border-2 border-red-800">
+            <span>🛑</span>
+            Tu periodo de prueba ha terminado. ¡Actualiza al Plan Premium para acceder a esta herramienta!
+          </div>
+        </div>
+      )}
+
+      {currentView === 'home' && <Dashboard user={user} onLevelChange={handleLevelChange} onNavigate={handleNavigate} />}
       {currentView === 'profile' && (
         <ProfileSettings user={user} onUpdateUser={(updated) => {
           const newUser = { ...user, ...updated };
@@ -409,7 +437,7 @@ const MainApp: React.FC = () => {
         }} />
       )}
       {currentView === 'chat' && <ChatInterface user={user} />}
-      {currentView === 'vision' && <ImageAnalyzer user={user} onNavigate={setCurrentView} />}
+      {currentView === 'vision' && <ImageAnalyzer user={user} onNavigate={handleNavigate} />}
       {currentView === 'voice' && <LiveConversation level={user.level} nativeLanguage={user.nativeLanguage || 'Inglés'} accent={user.accent || 'Español de España'} />}
       {currentView === 'podcasts' && <PodcastInterface />}
       {currentView === 'courses' && (() => {
