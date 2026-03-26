@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, SpanishLevel, SpanishAccent, UserGender } from '../types';
+import { User, SpanishLevel, SpanishAccent } from '../types';
 import { supabase } from '../services/supabase';
 
 interface ProfileSettingsProps {
