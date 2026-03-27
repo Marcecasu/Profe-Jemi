@@ -116,7 +116,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         role: m.role === 'feedback' ? 'model' : m.role,
         parts: [{ text: m.text }]
       }));
-      const aiResponse = await getTutorResponse(input, user, history);
+      const aiResponse = await getTutorResponse("", user, history);
       setMessages(prev => [...prev, { role: 'model', text: aiResponse || '', timestamp: new Date() }]);
     } catch (error) {
     } finally { setIsLoading(false); }

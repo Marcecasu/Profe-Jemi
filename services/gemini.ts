@@ -56,7 +56,7 @@ export const getTutorResponse = async (
     model: 'gemini-3-flash-preview',
     contents: [
       ...history,
-      { role: 'user', parts: [{ text: prompt }] }
+      ...(prompt.trim() ? [{ role: 'user', parts: [{ text: prompt }] }] : [])
     ],
     config: {
       systemInstruction: `${SYSTEM_INSTRUCTION} 

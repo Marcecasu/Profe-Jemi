@@ -163,7 +163,7 @@ const LessonInterface: React.FC<LessonInterfaceProps> = ({ lesson, user, onExit,
         currentTurnHistory.push(feedbackMsg);
       }
       const history = currentTurnHistory.map(m => ({ role: m.role === 'feedback' ? 'model' : m.role, parts: [{ text: m.text }] }));
-      const aiResponse = await getTutorResponse(userInput, user, history, lesson.systemPrompt);
+      const aiResponse = await getTutorResponse("", user, history, lesson.systemPrompt);
       setMessages(prev => [...prev, { role: 'model', text: aiResponse || '', timestamp: new Date() }]);
     } catch (error) { } finally { setIsLoading(false); }
   };
