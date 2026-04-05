@@ -59,7 +59,7 @@ export interface UserProfile {
   created_at: string;
 }
 
-export type PodcastCategory = 'Turismo' | 'Trabajo' | 'Estudio' | 'Cultura' | 'Culinaria';
+export type PodcastCategory = 'Turismo' | 'Trabajo' | 'Estudio' | 'Cultura' | 'Culinaria' | 'Gramática';
 
 export interface Podcast {
   id: string;

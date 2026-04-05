@@ -43,6 +43,14 @@ const FALLBACK_PODCASTS: Podcast[] = [
         category: 'Culinaria',
         audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/podcast_culinaria_pt.mp3',
         duration: 'Básico'
+    },
+    {
+        id: '6',
+        title: 'Engenharia do Espanhol (PT)',
+        description: 'Conoce la estructura del idioma español y cómo funciona.',
+        category: 'Gramática',
+        audioUrl: 'https://podcast.hablemosenespanol.com/pt/basico/engenharia_do_espanhol.MP3',
+        duration: 'Básico'
     }
 ];
 
@@ -52,6 +60,7 @@ const CATEGORIES: { id: PodcastCategory; icon: string; bg: string; text: string 
     { id: 'Estudio', icon: '📚', bg: 'bg-green-50', text: 'text-green-700' },
     { id: 'Cultura', icon: '🎭', bg: 'bg-orange-50', text: 'text-orange-700' },
     { id: 'Culinaria', icon: '🍳', bg: 'bg-red-50', text: 'text-red-700' },
+    { id: 'Gramática', icon: '📝', bg: 'bg-teal-50', text: 'text-teal-700' },
 ];
 
 const PodcastInterface: React.FC = () => {
@@ -70,7 +79,7 @@ const PodcastInterface: React.FC = () => {
                     setPodcasts(FALLBACK_PODCASTS);
                 } else {
                     // Mapeo básico asumiendo que las columnas se llaman igual
-                    const mappedData = data.map(item => ({
+                    const mappedData: Podcast[] = data.map(item => ({
                         id: item.id.toString(),
                         title: item.title,
                         description: item.description,
@@ -78,7 +87,15 @@ const PodcastInterface: React.FC = () => {
                         audioUrl: item.audio_url, // Asumiendo que guardarán la columna como audio_url
                         duration: item.duration,
                     }));
-                    setPodcasts(mappedData.length > 0 ? mappedData : FALLBACK_PODCASTS);
+                    // Merge Supabase data with fallbacks so hardcoded new podcasts appear
+                    const allPodcasts = [...mappedData];
+                    const dbIds = new Set(allPodcasts.map(p => p.id));
+                    FALLBACK_PODCASTS.forEach(fallbackPodcast => {
+                        if (!dbIds.has(fallbackPodcast.id)) {
+                            allPodcasts.push(fallbackPodcast);
+                        }
+                    });
+                    setPodcasts(allPodcasts);
                 }
             } catch (err) {
                 console.error('Error general fetching podcasts:', err);
