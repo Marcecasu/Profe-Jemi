@@ -1,8 +1,5 @@
--- Enable RLS
-alter table auth.users enable row level security;
-
 -- Create profiles table
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid not null references auth.users on delete cascade,
   email text,
   role text default 'user' check (role in ('user', 'admin')),
@@ -16,10 +13,12 @@ create table public.profiles (
 -- Enable RLS on profiles
 alter table public.profiles enable row level security;
 
--- Policies
+-- Policies (drop if exists to allow safe re-execution)
+drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
 create policy "Public profiles are viewable by everyone." on public.profiles
   for select using (true);
 
+drop policy if exists "Users can update own profile." on public.profiles;
 create policy "Users can update own profile." on public.profiles
   for update using (auth.uid() = id);
 
@@ -34,6 +33,7 @@ end;
 $$ language plpgsql security definer;
 
 -- Trigger to call handle_new_user
-create or replace trigger on_auth_user_created
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
   after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+  for each row execute function public.handle_new_user();
