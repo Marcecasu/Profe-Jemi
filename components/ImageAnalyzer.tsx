@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { analyzeImageVocabulary, generateSpeech } from '../services/gemini';
 import { User } from '../types';
@@ -6,9 +5,13 @@ import { User } from '../types';
 interface ImageAnalyzerProps {
   user: User;
   onNavigate: (view: string) => void;
+  isPremium?: boolean;
+  visionCountUsed?: number;
+  onIncrementVision?: () => void;
+  onOpenPricing?: () => void;
 }
 
-// IMPORTANTE: Ruta local a la imagen real de la Profe Jemi
+const FREE_VISION_LIMIT = 5;
 const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 function decodeBase64(base64: string) {
@@ -30,7 +33,14 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<Aud
   return buffer;
 }
 
-const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ user }) => {
+const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({
+  user,
+  onNavigate: _onNavigate,
+  isPremium = false,
+  visionCountUsed = 0,
+  onIncrementVision,
+  onOpenPricing
+}) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -39,9 +49,16 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ user }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  const remainingVision = Math.max(0, FREE_VISION_LIMIT - visionCountUsed);
+  const isLimitReached = !isPremium && remainingVision <= 0;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (isLimitReached) {
+        if (onOpenPricing) onOpenPricing();
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => { setSelectedImage(reader.result as string); setResult(null); };
       reader.readAsDataURL(file);
@@ -50,16 +67,26 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ user }) => {
 
   const handleAnalyze = async () => {
     if (!selectedImage) return;
+    if (isLimitReached) {
+      if (onOpenPricing) onOpenPricing();
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       const base64Data = selectedImage.split(',')[1];
       const mimeType = selectedImage.split(';')[0].split(':')[1];
       const analysis = await analyzeImageVocabulary(base64Data, mimeType, user.accent, user.nativeLanguage);
       setResult(analysis);
+      if (onIncrementVision) {
+        onIncrementVision();
+      }
     } catch (error: any) {
       console.error('[ImageAnalyzer] Catch error:', error);
       alert(`Error al analizar: ${error?.message || error}. ¡Reintenta!`);
-    } finally { setIsAnalyzing(false); }
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const playSpeech = async (text: string, id: string) => {
@@ -77,30 +104,126 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ user }) => {
         source.connect(audioContextRef.current.destination);
         source.onended = () => setPlayingAudioIdx(null);
         source.start();
-      } else { setPlayingAudioIdx(null); }
-    } catch (e) { setPlayingAudioIdx(null); }
+      } else {
+        setPlayingAudioIdx(null);
+      }
+    } catch (e) {
+      setPlayingAudioIdx(null);
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 w-full text-gray-900">
-      <div className="mb-12 text-center">
-        <h2 className="text-4xl font-outfit font-black text-gray-900 mb-2">¿Qué es esto en español? 📸</h2>
-        <p className="text-gray-600">Saca una foto y la Profe Jemi te enseñará vocabulario. ✨</p>
+    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 w-full text-gray-900">
+      {/* Banner de Créditos / Usos */}
+      <div className="w-full mb-8">
+        {isPremium ? (
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📸</span>
+              <div>
+                <p className="text-xs font-black uppercase text-amber-800 tracking-wider">Plan Premium Activo</p>
+                <p className="text-sm font-bold text-gray-800">Vision IA Ilimitada • Analiza todas las fotos que quieras</p>
+              </div>
+            </div>
+            <span className="text-xs bg-amber-200 text-amber-900 font-bold px-3 py-1 rounded-full">ILIMITADO</span>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📸</span>
+                <span className="text-xs font-black uppercase tracking-wider text-gray-500">
+                  Fotos Gratuitas del Mes
+                </span>
+              </div>
+              <span className="text-xs font-extrabold text-red-600">
+                {remainingVision} de {FREE_VISION_LIMIT} análisis disponibles
+              </span>
+            </div>
+            {/* Barra de progreso */}
+            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-full bg-red-500 transition-all duration-300"
+                style={{ width: `${Math.min(100, (visionCountUsed / FREE_VISION_LIMIT) * 100)}%` }}
+              ></div>
+            </div>
+
+            {isLimitReached && (
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <p className="text-xs font-bold text-red-800">
+                  Has completado tus 5 fotos gratis de este mes.
+                </p>
+                {onOpenPricing && (
+                  <button
+                    onClick={onOpenPricing}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-4 py-2 rounded-lg shadow-sm transition-all"
+                  >
+                    Desbloquear Vision Ilimitada 🚀
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl sm:text-4xl font-outfit font-black text-gray-900 mb-2">¿Qué es esto en español? 📸</h2>
+        <p className="text-gray-600 text-sm sm:text-base">Saca una foto y la Profe Jemi te enseñará vocabulario y pronunciación en contexto. ✨</p>
       </div>
 
       {!selectedImage ? (
-        <div onClick={() => fileInputRef.current?.click()} className="bg-white border-4 border-dashed border-red-100 rounded-[3rem] p-16 flex flex-col items-center justify-center cursor-pointer hover:bg-red-50 transition-all min-h-[400px]">
-          <span className="text-6xl mb-4">📸</span>
-          <p className="text-2xl font-black text-gray-700">Toca para tomar una foto</p>
-          <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+        <div
+          onClick={() => {
+            if (isLimitReached) {
+              if (onOpenPricing) onOpenPricing();
+            } else {
+              fileInputRef.current?.click();
+            }
+          }}
+          className={`bg-white border-4 border-dashed rounded-[3rem] p-12 sm:p-16 flex flex-col items-center justify-center cursor-pointer transition-all min-h-[380px] shadow-sm ${
+            isLimitReached
+              ? 'border-gray-300 hover:border-amber-400'
+              : 'border-red-200 hover:bg-red-50/50 hover:border-red-400'
+          }`}
+        >
+          <span className="text-6xl mb-4">{isLimitReached ? '🔒' : '📸'}</span>
+          <p className="text-xl sm:text-2xl font-black text-gray-800 text-center">
+            {isLimitReached ? 'Límite de 5 fotos alcanzado este mes' : 'Toca para tomar o subir una foto'}
+          </p>
+          <p className="text-sm text-gray-500 mt-2 text-center max-w-sm">
+            {isLimitReached
+              ? 'Pásate al Plan Premium para analizar fotos de forma ilimitada.'
+              : 'Aprende los objetos cotidianos de tu habitación, comida, calle y más.'}
+          </p>
+          {isLimitReached && onOpenPricing && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onOpenPricing(); }}
+              className="mt-6 bg-red-600 hover:bg-red-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition-all"
+            >
+              Hacerse Premium ✨
+            </button>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
         </div>
       ) : (
         <div className="space-y-8 animate-in zoom-in duration-300">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 p-8">
-            <img src={selectedImage} alt="Preview" className="w-full h-80 object-cover rounded-2xl mb-8" />
+          <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 p-6 sm:p-8">
+            <img src={selectedImage} alt="Preview" className="w-full h-72 sm:h-80 object-cover rounded-2xl mb-6 shadow-sm" />
             {!result && (
-              <button onClick={handleAnalyze} disabled={isAnalyzing} className="w-full bg-red-500 text-white font-black py-5 rounded-2xl shadow-xl disabled:bg-gray-300">
-                {isAnalyzing ? "Analizando... 👀" : "Analizar con Profe Jemi ✨"}
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || isLimitReached}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 sm:py-5 rounded-2xl shadow-xl disabled:bg-gray-300 transition-all text-base sm:text-lg flex justify-center items-center gap-2"
+              >
+                {isAnalyzing ? "Analizando con IA... 👀" : "Analizar con Profe Jemi ✨"}
               </button>
             )}
             {result && (
@@ -159,7 +282,12 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ user }) => {
                     </div>
                   ))}
                 </div>
-                <button onClick={() => { setSelectedImage(null); setResult(null); }} className="w-full bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-colors">Analizar otra foto</button>
+                <button
+                  onClick={() => { setSelectedImage(null); setResult(null); }}
+                  className="w-full bg-gray-100 text-gray-700 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-colors"
+                >
+                  Analizar otra foto 📷
+                </button>
               </div>
             )}
           </div>

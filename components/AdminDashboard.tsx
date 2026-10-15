@@ -49,17 +49,19 @@ const AdminDashboard: React.FC = () => {
     const stats = {
         total: users.length,
         admins: users.filter(u => u.role === 'admin').length,
-        trials: users.filter(u => u.subscription_status === 'trial').length,
+        trials: users.filter(u => u.subscription_status === 'trial' || u.subscription_status === 'free').length,
         active: users.filter(u => u.subscription_status === 'active').length,
     };
 
-    const formatDate = (dateStr: string) => {
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return 'N/A';
         return new Date(dateStr).toLocaleDateString('es-ES', {
             day: '2-digit', month: 'short', year: 'numeric'
         });
     };
 
-    const isTrialExpired = (trialEndsAt: string) => {
+    const isTrialExpired = (trialEndsAt?: string) => {
+        if (!trialEndsAt) return false;
         return new Date(trialEndsAt) < new Date();
     };
 
@@ -133,13 +135,13 @@ const AdminDashboard: React.FC = () => {
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${user.subscription_status === 'active'
                                             ? 'bg-green-100 text-green-700'
-                                            : user.subscription_status === 'trial'
+                                            : (user.subscription_status === 'trial' || user.subscription_status === 'free')
                                                 ? 'bg-amber-100 text-amber-700'
                                                 : user.subscription_status === 'past_due'
                                                     ? 'bg-orange-100 text-orange-700'
                                                     : 'bg-gray-100 text-gray-500'
                                             }`}>
-                                            {user.subscription_status}
+                                            {user.subscription_status === 'active' ? '💎 Premium' : (user.subscription_status === 'free' || user.subscription_status === 'trial') ? '🆓 Freemium' : user.subscription_status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

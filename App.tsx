@@ -16,8 +16,9 @@ import ResetPassword from './components/Auth/ResetPassword';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
+import PricingModal from './components/Subscription/PricingModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { supabase } from './services/supabase';
+import { supabase, incrementLiveMinutes, incrementVisionUsage } from './services/supabase';
 import { User, SpanishLevel, Lesson } from './types';
 
 const LESSONS: Lesson[] = [
@@ -304,21 +305,47 @@ const MainApp: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const [showPaywallAlert, setShowPaywallAlert] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
-  // Determinar si tiene acceso (Premium o en Trial)
+  // Estado de suscripción: Premium vs Freemium
   const isPremium = profile?.subscription_status === 'active' || isAdmin;
-  const trialEndsAt = profile?.trial_ends_at;
-  const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 14;
-  const hasAccess = isPremium || daysLeft > 0;
 
-  // Interceptar navegación para bloquear herramientas si no tiene acceso
+  // Seguimiento de consumo mensual de IA
+  const [liveMinutesUsed, setLiveMinutesUsed] = useState<number>(() => {
+    if (profile?.live_minutes_used !== undefined) return profile.live_minutes_used;
+    return Number(localStorage.getItem(`profe_jemi_live_minutes_${authUser?.id}`) || 0);
+  });
+  const [visionCountUsed, setVisionCountUsed] = useState<number>(() => {
+    if (profile?.vision_count_used !== undefined) return profile.vision_count_used;
+    return Number(localStorage.getItem(`profe_jemi_vision_count_${authUser?.id}`) || 0);
+  });
+
+  useEffect(() => {
+    if (profile?.live_minutes_used !== undefined) setLiveMinutesUsed(profile.live_minutes_used);
+    if (profile?.vision_count_used !== undefined) setVisionCountUsed(profile.vision_count_used);
+  }, [profile]);
+
+  const handleLiveMinutesAdded = async (minutes: number) => {
+    const next = liveMinutesUsed + minutes;
+    setLiveMinutesUsed(next);
+    if (authUser) {
+      await incrementLiveMinutes(authUser.id, liveMinutesUsed, minutes);
+    }
+  };
+
+  const handleVisionUsed = async () => {
+    const next = visionCountUsed + 1;
+    setVisionCountUsed(next);
+    if (authUser) {
+      await incrementVisionUsage(authUser.id, visionCountUsed);
+    }
+  };
+
+  // En el modelo Freemium, el usuario tiene acceso libre a Home, Perfil, Cursos Básicos, Live (15 min) y Vision (5 fotos)
   const handleNavigate = (view: string) => {
-    if (!hasAccess && !['home', 'profile'].includes(view)) {
-      window.history.pushState(null, '', '#home');
-      setCurrentView('home');
-      setShowPaywallAlert(true);
-      setTimeout(() => setShowPaywallAlert(false), 5000); // Ocultar alerta después de 5s
+    if (!isPremium && (view === 'chat' || view === 'podcasts')) {
+      // Tutor y Podcasts son funciones exclusivas de Premium
+      setShowPricing(true);
       return;
     }
     window.history.pushState(null, '', `#${view}`);
@@ -454,17 +481,17 @@ const MainApp: React.FC = () => {
 
   return (
     <Layout user={user} currentView={currentView} onNavigate={handleNavigate} isAdmin={isAdmin}>
-      {/* Alerta de acceso denegado (Paywall) */}
-      {showPaywallAlert && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-          <div className="bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-3 border-2 border-red-800">
-            <span>🛑</span>
-            Tu periodo de prueba ha terminado. ¡Actualiza al Plan Premium para acceder a esta herramienta!
-          </div>
-        </div>
-      )}
+      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
 
-      {currentView === 'home' && <Dashboard user={user} onLevelChange={handleLevelChange} onNavigate={handleNavigate} />}
+      {currentView === 'home' && (
+        <Dashboard
+          user={user}
+          onLevelChange={handleLevelChange}
+          onNavigate={handleNavigate}
+          liveMinutesUsed={liveMinutesUsed}
+          visionCountUsed={visionCountUsed}
+        />
+      )}
       {currentView === 'profile' && (
         <ProfileSettings user={user} onUpdateUser={(updated) => {
           const newUser = { ...user, ...updated };
@@ -473,8 +500,27 @@ const MainApp: React.FC = () => {
         }} />
       )}
       {currentView === 'chat' && <ChatInterface user={user} />}
-      {currentView === 'vision' && <ImageAnalyzer user={user} onNavigate={handleNavigate} />}
-      {currentView === 'voice' && <LiveConversation level={user.level} nativeLanguage={user.nativeLanguage || 'Inglés'} accent={user.accent || 'Español de España'} />}
+      {currentView === 'vision' && (
+        <ImageAnalyzer
+          user={user}
+          onNavigate={handleNavigate}
+          isPremium={isPremium}
+          visionCountUsed={visionCountUsed}
+          onIncrementVision={handleVisionUsed}
+          onOpenPricing={() => setShowPricing(true)}
+        />
+      )}
+      {currentView === 'voice' && (
+        <LiveConversation
+          level={user.level}
+          nativeLanguage={user.nativeLanguage || 'Inglés'}
+          accent={user.accent || 'Español de España'}
+          isPremium={isPremium}
+          liveMinutesUsed={liveMinutesUsed}
+          onLiveMinutesAdded={handleLiveMinutesAdded}
+          onOpenPricing={() => setShowPricing(true)}
+        />
+      )}
       {currentView === 'podcasts' && <PodcastInterface />}
       {currentView === 'courses' && (() => {
         const userLessons = LESSONS.filter(l => l.level === user.level);
@@ -483,8 +529,29 @@ const MainApp: React.FC = () => {
 
         return (
           <div className="max-w-7xl mx-auto px-4 py-12 w-full">
-            <h2 className="text-3xl font-outfit font-bold mb-2">Mis Cursos Personalizados 📚</h2>
-            <p className="text-gray-500 mb-8">Nivel: <span className="font-bold text-red-600">{user.level}</span> • {userLessons.length} lecciones disponibles</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-3xl font-outfit font-bold mb-2">Mis Cursos Personalizados 📚</h2>
+                <p className="text-gray-500">
+                  Nivel: <span className="font-bold text-red-600">{user.level}</span> • {userLessons.length} lecciones disponibles
+                </p>
+              </div>
+              {!isPremium && (
+                <div className="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex items-center gap-3">
+                  <span className="text-xl">🎁</span>
+                  <div className="text-xs">
+                    <p className="font-bold text-amber-900">Lecciones básicas gratuitas</p>
+                    <p className="text-amber-700">Actualiza a Premium para niveles avanzados y EFE</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPricing(true)}
+                    className="ml-auto bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-sm transition-all"
+                  >
+                    Ver Planes 💎
+                  </button>
+                </div>
+              )}
+            </div>
 
             {categories.filter(c => !isEFE(c)).length > 0 && (
               <>
@@ -493,9 +560,25 @@ const MainApp: React.FC = () => {
                   <div key={cat} className="mb-8">
                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-2">{cat}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {userLessons.filter(l => (l.category || 'General') === cat).map(lesson => (
-                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => { window.history.pushState(null, '', `#lesson-${lesson.id}`); setActiveLesson(lesson); }} />
-                      ))}
+                      {userLessons.filter(l => (l.category || 'General') === cat).map(lesson => {
+                        const isLocked = !isPremium && lesson.level !== SpanishLevel.BASIC;
+                        return (
+                          <LessonCard
+                            key={lesson.id}
+                            lesson={lesson}
+                            isCompleted={completedLessonIds.includes(lesson.id)}
+                            isLocked={isLocked}
+                            onStart={() => {
+                              if (isLocked) {
+                                setShowPricing(true);
+                              } else {
+                                window.history.pushState(null, '', `#lesson-${lesson.id}`);
+                                setActiveLesson(lesson);
+                              }
+                            }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -512,9 +595,25 @@ const MainApp: React.FC = () => {
                   <div key={cat} className="mb-8">
                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-2">{cat}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {userLessons.filter(l => l.category === cat).map(lesson => (
-                        <LessonCard key={lesson.id} lesson={lesson} isCompleted={completedLessonIds.includes(lesson.id)} onStart={() => { window.history.pushState(null, '', `#lesson-${lesson.id}`); setActiveLesson(lesson); }} />
-                      ))}
+                      {userLessons.filter(l => l.category === cat).map(lesson => {
+                        const isLocked = !isPremium;
+                        return (
+                          <LessonCard
+                            key={lesson.id}
+                            lesson={lesson}
+                            isCompleted={completedLessonIds.includes(lesson.id)}
+                            isLocked={isLocked}
+                            onStart={() => {
+                              if (isLocked) {
+                                setShowPricing(true);
+                              } else {
+                                window.history.pushState(null, '', `#lesson-${lesson.id}`);
+                                setActiveLesson(lesson);
+                              }
+                            }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -528,7 +627,12 @@ const MainApp: React.FC = () => {
   );
 };
 
-const LessonCard: React.FC<{ lesson: Lesson, isCompleted: boolean, onStart: () => void }> = ({ lesson, isCompleted, onStart }) => {
+const LessonCard: React.FC<{
+  lesson: Lesson;
+  isCompleted: boolean;
+  isLocked?: boolean;
+  onStart: () => void;
+}> = ({ lesson, isCompleted, isLocked = false, onStart }) => {
   // Normalizar el nombre de la categoría (ej: "Comunicación Oficial" -> "comunicacion_oficial")
   const normalizedCategory = (lesson.category || 'general')
     .toLowerCase()
@@ -539,7 +643,9 @@ const LessonCard: React.FC<{ lesson: Lesson, isCompleted: boolean, onStart: () =
   const imageUrl = `/images/cursos/${normalizedCategory}.jpg`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group hover:shadow-md transition-all hover:-translate-y-1">
+    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group hover:shadow-md transition-all hover:-translate-y-1 relative ${
+      isLocked ? 'opacity-95' : ''
+    }`}>
       <div className="h-32 relative flex items-center justify-center overflow-hidden bg-gray-100">
         <img 
             src={imageUrl} 
@@ -557,14 +663,50 @@ const LessonCard: React.FC<{ lesson: Lesson, isCompleted: boolean, onStart: () =
         {/* Overlay degradado para que el texto debajo siempre se lea bien */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-0"></div>
 
-        {isCompleted && <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-lg border-2 border-white z-10">✅</div>}
+        {isCompleted && (
+          <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-lg border-2 border-white z-10">
+            ✅
+          </div>
+        )}
+
+        {isLocked && (
+          <div className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-lg border border-amber-300 z-10 flex items-center gap-1">
+            <span>🔒</span> PREMIUM
+          </div>
+        )}
       </div>
+
       <div className="p-6 flex-grow relative z-10">
-        <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase mb-2 inline-block">{lesson.level}</span>
+        <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase mb-2 inline-block">
+          {lesson.level}
+        </span>
         <h3 className="text-xl font-outfit font-bold mb-2">{lesson.title}</h3>
         <p className="text-gray-500 text-sm">{lesson.description}</p>
       </div>
-      <div className="p-6 mt-auto relative z-10"><button onClick={onStart} className="w-full font-bold py-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-all">{isCompleted ? 'Repetir' : 'Empezar'}</button></div>
+
+      <div className="p-6 mt-auto relative z-10">
+        <button
+          onClick={onStart}
+          className={`w-full font-bold py-3 rounded-xl transition-all shadow-md ${
+            isLocked
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white flex items-center justify-center gap-2'
+              : isCompleted
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-red-500 hover:bg-red-600 text-white'
+          }`}
+        >
+          {isLocked ? (
+            <>
+              <span>Desbloquear con Premium</span>
+              <span>💎</span>
+            </>
+          ) : isCompleted ? (
+            'Repetir Lección'
+          ) : (
+            'Empezar Lección'
+          )}
+        </button>
+      </div>
     </div>
   );
 };

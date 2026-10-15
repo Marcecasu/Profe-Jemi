@@ -4,12 +4,6 @@ import { User, SpanishLevel } from '../types';
 import PricingModal from './Subscription/PricingModal';
 import { useAuth } from '../contexts/AuthContext';
 
-interface DashboardProps {
-  user: User;
-  onLevelChange: (level: SpanishLevel) => void;
-  onNavigate: (view: string) => void;
-}
-
 const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 
 // Sugerencias personalizadas según nivel
@@ -40,13 +34,21 @@ const TOOLS = [
   { id: 'podcasts', icon: '🎧', name: 'Podcasts', desc: 'Aprende escuchando' },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
+interface DashboardProps {
+  user: User;
+  onLevelChange: (level: SpanishLevel) => void;
+  onNavigate: (view: string) => void;
+  liveMinutesUsed?: number;
+  visionCountUsed?: number;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed = 0, visionCountUsed = 0 }) => {
   const [showPricing, setShowPricing] = React.useState(false);
   const { profile, isAdmin } = useAuth();
 
   const isPremium = profile?.subscription_status === 'active' || isAdmin;
-  const trialEndsAt = profile?.trial_ends_at;
-  const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 14;
+  const liveMinutesLeft = Math.max(0, 15 - liveMinutesUsed);
+  const visionLeft = Math.max(0, 5 - visionCountUsed);
 
   // Scoring system based on user data
   const lessonsScore = Math.min(40, Math.floor(user.progress * 0.4)); // Max 40 pts
@@ -119,21 +121,80 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
         </div>
       </div>
 
-      {/* Trial Warning */}
-      {!isPremium && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex flex-col md:flex-row items-center justify-between shadow-sm">
-          <div className="mb-3 md:mb-0">
-            <h3 className="text-base font-bold text-amber-900 flex items-center gap-2">
-              <span>⚠️</span> Tienes {daysLeft} días de prueba restante
-            </h3>
-            <p className="text-amber-800 text-sm">Suscríbete ahora para no perder acceso a tus clases y progreso.</p>
+      {/* Tarjeta de Estado: Freemium vs Premium */}
+      {!isPremium ? (
+        <div className="bg-gradient-to-r from-red-50 via-white to-amber-50 border border-red-100 rounded-3xl p-6 mb-8 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                <span>🎁</span> Plan Gratuito Activo (Sin caducidad)
+              </div>
+              <h3 className="text-xl font-outfit font-black text-gray-900">
+                Tus Créditos Mensuales de Práctica
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Disfrutas de acceso libre a la gramática básica y una cuota mensual gratuita de IA.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+              {/* Cupo Live */}
+              <div className="bg-white px-4 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[150px]">
+                <div className="flex items-center justify-between text-xs text-gray-500 font-bold mb-1">
+                  <span>🎙️ Voz Live</span>
+                  <span className="text-red-600 font-extrabold">{liveMinutesLeft} min</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, (liveMinutesUsed / 15) * 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">de 15 min al mes</p>
+              </div>
+
+              {/* Cupo Vision */}
+              <div className="bg-white px-4 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[150px]">
+                <div className="flex items-center justify-between text-xs text-gray-500 font-bold mb-1">
+                  <span>📸 Vision IA</span>
+                  <span className="text-red-600 font-extrabold">{visionLeft} fotos</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, (visionCountUsed / 5) * 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">de 5 fotos al mes</p>
+              </div>
+
+              {/* Botón Upgrade */}
+              <button
+                onClick={() => setShowPricing(true)}
+                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-black py-3.5 px-6 rounded-2xl transition-all shadow-lg active:scale-95 text-sm flex items-center justify-center gap-2"
+              >
+                <span>Hacerse Premium</span>
+                <span>💎</span>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowPricing(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-xl transition-colors shadow-md text-sm"
-          >
-            Actualizar Plan 💎
-          </button>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 rounded-3xl p-6 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-4xl">👑</span>
+            <div>
+              <div className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 text-xs font-black px-3 py-0.5 rounded-full uppercase tracking-wider mb-1">
+                Miembro Premium Activo
+              </div>
+              <h3 className="text-lg font-outfit font-black text-gray-900">
+                Acceso Ilimitado Desbloqueado ✨
+              </h3>
+              <p className="text-xs text-gray-600">
+                30 horas de Live al mes, todos los acentos regionales, Vision ilimitada y cursos EFE completos.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

@@ -53,8 +53,11 @@ export interface UserProfile {
   id: string;
   email: string;
   role: 'user' | 'admin';
-  subscription_status: 'trial' | 'active' | 'past_due' | 'canceled';
-  trial_ends_at: string;
+  subscription_status: 'free' | 'trial' | 'active' | 'past_due' | 'canceled';
+  trial_ends_at?: string;
+  live_minutes_used?: number;
+  vision_count_used?: number;
+  usage_reset_at?: string;
   stripe_customer_id: string | null;
   created_at: string;
 }

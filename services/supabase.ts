@@ -63,7 +63,7 @@ export async function deleteUserProfile(userId: string): Promise<boolean> {
     return true;
 }
 
-export async function updateUserSubscriptionStatus(userId: string, status: 'trial' | 'active' | 'past_due' | 'canceled'): Promise<boolean> {
+export async function updateUserSubscriptionStatus(userId: string, status: 'free' | 'trial' | 'active' | 'past_due' | 'canceled'): Promise<boolean> {
     const { error } = await supabase
         .from('profiles')
         .update({ subscription_status: status })
@@ -74,4 +74,32 @@ export async function updateUserSubscriptionStatus(userId: string, status: 'tria
         return false;
     }
     return true;
+}
+
+export async function incrementLiveMinutes(userId: string, currentMinutes: number, addedMinutes: number): Promise<number> {
+    const newTotal = Math.max(0, currentMinutes + addedMinutes);
+    try {
+        await supabase
+            .from('profiles')
+            .update({ live_minutes_used: newTotal })
+            .eq('id', userId);
+    } catch (e) {
+        console.warn('Could not persist live minutes to supabase, falling back to local storage', e);
+    }
+    localStorage.setItem(`profe_jemi_live_minutes_${userId}`, String(newTotal));
+    return newTotal;
+}
+
+export async function incrementVisionUsage(userId: string, currentCount: number): Promise<number> {
+    const newTotal = currentCount + 1;
+    try {
+        await supabase
+            .from('profiles')
+            .update({ vision_count_used: newTotal })
+            .eq('id', userId);
+    } catch (e) {
+        console.warn('Could not persist vision count to supabase, falling back to local storage', e);
+    }
+    localStorage.setItem(`profe_jemi_vision_count_${userId}`, String(newTotal));
+    return newTotal;
 }
