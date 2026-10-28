@@ -12,6 +12,7 @@ create table if not exists public.profiles (
   trial_ends_at timestamptz default (now() + interval '30 days'),
   live_minutes_used integer default 0,
   vision_count_used integer default 0,
+  translations_count_used integer default 0,
   usage_reset_at timestamptz default (now() + interval '30 days'),
   stripe_customer_id text,
   subscription_id text,
@@ -23,6 +24,7 @@ create table if not exists public.profiles (
 -- Si la tabla ya existía, añadir columnas faltantes de forma segura
 alter table public.profiles add column if not exists live_minutes_used integer default 0;
 alter table public.profiles add column if not exists vision_count_used integer default 0;
+alter table public.profiles add column if not exists translations_count_used integer default 0;
 alter table public.profiles add column if not exists usage_reset_at timestamptz default (now() + interval '30 days');
 alter table public.profiles add column if not exists subscription_id text;
 alter table public.profiles add column if not exists updated_at timestamptz default now();
@@ -54,6 +56,7 @@ begin
     subscription_status, 
     live_minutes_used, 
     vision_count_used, 
+    translations_count_used,
     usage_reset_at
   )
   values (
@@ -62,6 +65,7 @@ begin
     'free', 
     0, 
     0, 
+    0,
     now() + interval '30 days'
   )
   on conflict (id) do nothing;

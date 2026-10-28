@@ -141,8 +141,8 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, initialPla
                     </h2>
                     <p className="text-sm opacity-95 max-w-sm mx-auto">
                         {isBR
-                            ? 'Acesso completo à IA, 30 horas de Live, visão e todos os sotaques sem restrições.'
-                            : 'Unlimited AI access, 30h Live Voice, Vision AI and all accents without limits.'}
+                            ? 'Acesso completo à IA, Intérprete em tempo real, 30h de Live e todos os sotaques.'
+                            : 'Unlimited AI access, Live Interpreter, 30h Live Voice, Vision AI and all accents.'}
                     </p>
 
                     {/* Selector de Región (Brasil vs Global) */}
@@ -221,6 +221,18 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, initialPla
                     {/* Lista comparativa de Beneficios */}
                     <div className="space-y-3 mb-6 bg-red-50/50 p-4 rounded-2xl border border-red-100">
                         <div className="flex items-start gap-3">
+                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🗣️</span>
+                            <div className="text-xs sm:text-sm">
+                                <strong className="text-gray-900 font-bold">
+                                    {isBR ? 'Intérprete em Tempo Real Ilimitado' : 'Unlimited Live Interpreter'}
+                                </strong>
+                                <p className="text-gray-500 text-[11px]">
+                                    {isBR ? 'Traduza conversas com gírias e sotaques locais (grátis: 7 frases)' : 'Real-time conversation with local idioms (free: 7 phrases)'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
                             <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🎙️</span>
                             <div className="text-xs sm:text-sm">
                                 <strong className="text-gray-900 font-bold">
@@ -245,7 +257,7 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, initialPla
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🗣️</span>
+                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🌎</span>
                             <div className="text-xs sm:text-sm">
                                 <strong className="text-gray-900 font-bold">
                                     {isBR ? 'Todos os Sotaques Disponíveis' : 'All Regional Accents Unlocked'}

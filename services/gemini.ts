@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SpanishAccent, User } from "../types";
 
@@ -235,4 +234,66 @@ export const analyzeImageVocabulary = async (base64Image: string, mimeType: stri
     console.error('[ImageAnalyzer] Full error:', JSON.stringify(e, null, 2));
     throw e; // Re-throw so ImageAnalyzer.tsx can show the real error
   }
+};
+
+export interface TranslationResult {
+  translatedText: string;
+  culturalTip?: string;
+  detectedContext?: string;
+}
+
+export const translateLive = async (
+  text: string,
+  fromLanguage: string,
+  toLanguage: string,
+  targetAccent: SpanishAccent = 'Español de España',
+  isToSpanish: boolean = true
+): Promise<TranslationResult> => {
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+
+  const prompt = isToSpanish
+    ? `Eres un intérprete simultáneo de élite con profundo conocimiento de los modismos locales.
+Traduce el siguiente texto expresado en "${fromLanguage}" a un Español sumamente natural, coloquial y exacto adaptado a la variante regional: "${targetAccent}".
+Aplica el vocabulario real que usa la gente de ese país (por ejemplo, en Argentina usa voseo y modismos rioplatenses como 'subte', 'remera', 'plata'; en México modismos mexicanos como 'camión', 'playera', 'lana', 'chido'; en España léxico peninsular como 'autobús', 'camiseta', 'pasta', 'vale').
+
+Texto original a traducir:
+"${text}"
+
+Devuelve estrictamente un objeto JSON con:
+- translatedText: la traducción fiel, natural y localizada al español de "${targetAccent}".
+- culturalTip: un tip explicativo breve escrito en "${fromLanguage}" explicando modismos o diferencias culturales si las hay (ej: "Na Argentina usa-se 'subte' em vez de metrô"). Si la frase es neutra, déjalo como string vacío "".
+- detectedContext: categoría breve (ej: Restaurante, Compras, Transporte, Dirección, Salud, Trámites).`
+    : `Eres un intérprete simultáneo de élite.
+Traduce el siguiente texto en Español ("${targetAccent}") al idioma "${toLanguage}" de forma clara, natural y precisa para que el usuario entienda exactamente qué le dijeron en la vida real.
+
+Texto en español:
+"${text}"
+
+Devuelve estrictamente un objeto JSON con:
+- translatedText: la traducción natural y precisa en "${toLanguage}".
+- culturalTip: breve aclaración en "${toLanguage}" si el español contenía modismos locales peculiares. Si es estándar, déjalo como string vacío "".
+- detectedContext: categoría breve (ej: Transporte, Restaurante, Compras, Salud, Trámites).`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          translatedText: { type: Type.STRING },
+          culturalTip: { type: Type.STRING },
+          detectedContext: { type: Type.STRING },
+        },
+        required: ["translatedText"]
+      }
+    }
+  });
+
+  if (!response.text) {
+    throw new Error('No se recibió texto de traducción de Gemini');
+  }
+
+  return JSON.parse(response.text) as TranslationResult;
 };

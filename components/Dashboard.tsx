@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, SpanishLevel } from '../types';
 import PricingModal from './Subscription/PricingModal';
@@ -9,14 +8,14 @@ const PROFE_JEMI_REAL = "/profe_jemi.jpg";
 // Sugerencias personalizadas según nivel
 const SUGGESTIONS: Record<string, { icon: string; title: string; desc: string; action: string; view: string }[]> = {
   [SpanishLevel.BASIC]: [
+    { icon: '🗣️', title: 'Comunícate al instante', desc: 'Usa el Intérprete en Vivo para traducir tu voz al español con modismos locales.', action: 'Ir a Intérprete', view: 'interpreter' },
     { icon: '🎙️', title: 'Practica tu pronunciación', desc: 'Habla con la Profe Jemi en vivo para ganar confianza desde el primer día.', action: 'Ir a Live', view: 'voice' },
     { icon: '📸', title: 'Aprende vocabulario visual', desc: 'Sube una foto de tu entorno y aprende los nombres en español.', action: 'Ir a Vision', view: 'vision' },
-    { icon: '📚', title: 'Completa tu primera lección', desc: 'Empieza con saludos y presentaciones para romper el hielo.', action: 'Ver Cursos', view: 'courses' },
   ],
   [SpanishLevel.INTERMEDIATE]: [
+    { icon: '🗣️', title: 'Aprende modismos de la calle', desc: 'El Intérprete te enseña las palabras coloquiales exactas de cada país.', action: 'Ir a Intérprete', view: 'interpreter' },
     { icon: '💬', title: 'Conversa sobre temas reales', desc: 'Practica situaciones del día a día con el Tutor IA.', action: 'Ir al Tutor', view: 'chat' },
     { icon: '🎙️', title: 'Mejora tu fluidez oral', desc: 'Las conversaciones en vivo te ayudarán a pensar en español.', action: 'Ir a Live', view: 'voice' },
-    { icon: '📚', title: 'Domina los tiempos verbales', desc: 'El pasado es tu próximo reto. ¡Atrévete!', action: 'Ver Cursos', view: 'courses' },
   ],
   [SpanishLevel.ADVANCED]: [
     { icon: '🎙️', title: 'Debate en español', desc: 'Pon a prueba tu fluidez debatiendo temas complejos en vivo.', action: 'Ir a Live', view: 'voice' },
@@ -27,6 +26,7 @@ const SUGGESTIONS: Record<string, { icon: string; title: string; desc: string; a
 
 // Títulos de herramientas
 const TOOLS = [
+  { id: 'interpreter', icon: '🗣️', name: 'Intérprete', desc: 'Traducción en vivo' },
   { id: 'chat', icon: '💬', name: 'Tutor IA', desc: 'Chat inteligente' },
   { id: 'voice', icon: '🎙️', name: 'Live', desc: 'Conversación en vivo' },
   { id: 'vision', icon: '📸', name: 'Vision', desc: 'Analizar imágenes' },
@@ -40,15 +40,23 @@ interface DashboardProps {
   onNavigate: (view: string) => void;
   liveMinutesUsed?: number;
   visionCountUsed?: number;
+  translationsCountUsed?: number;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed = 0, visionCountUsed = 0 }) => {
+const Dashboard: React.FC<DashboardProps> = ({
+  user,
+  onNavigate,
+  liveMinutesUsed = 0,
+  visionCountUsed = 0,
+  translationsCountUsed = 0
+}) => {
   const [showPricing, setShowPricing] = React.useState(false);
   const { profile, isAdmin } = useAuth();
 
   const isPremium = profile?.subscription_status === 'active' || isAdmin;
   const liveMinutesLeft = Math.max(0, 15 - liveMinutesUsed);
   const visionLeft = Math.max(0, 5 - visionCountUsed);
+  const translationsLeft = Math.max(0, 7 - translationsCountUsed);
 
   // Scoring system based on user data
   const lessonsScore = Math.min(40, Math.floor(user.progress * 0.4)); // Max 40 pts
@@ -86,21 +94,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
           </p>
           <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             <button
+              onClick={() => onNavigate('interpreter')}
+              className="bg-white text-red-600 font-bold py-3 px-6 rounded-2xl hover:bg-red-50 transition-all shadow-xl active:scale-95 text-sm flex items-center gap-1.5"
+            >
+              <span>🗣️</span> Intérprete en Vivo
+            </button>
+            <button
               onClick={() => onNavigate('courses')}
-              className="bg-white text-red-600 font-bold py-3 px-8 rounded-2xl hover:bg-red-50 transition-all shadow-xl active:scale-95 text-sm"
+              className="bg-red-700/40 backdrop-blur-md text-white border border-white/30 font-bold py-3 px-6 rounded-2xl hover:bg-red-700/60 transition-all active:scale-95 text-sm"
             >
               Ver mis cursos 📚
             </button>
             <button
               onClick={() => onNavigate('voice')}
-              className="bg-red-700/40 backdrop-blur-md text-white border border-white/30 font-bold py-3 px-8 rounded-2xl hover:bg-red-700/60 transition-all active:scale-95 text-sm"
+              className="bg-red-700/40 backdrop-blur-md text-white border border-white/30 font-bold py-3 px-6 rounded-2xl hover:bg-red-700/60 transition-all active:scale-95 text-sm"
             >
               Conversación Live 🎙️
             </button>
             {!isPremium && (
               <button
                 onClick={() => setShowPricing(true)}
-                className="bg-amber-400 text-amber-900 font-bold py-3 px-8 rounded-2xl hover:bg-amber-300 transition-all shadow-xl active:scale-95 text-sm border border-amber-200"
+                className="bg-amber-400 text-amber-900 font-bold py-3 px-6 rounded-2xl hover:bg-amber-300 transition-all shadow-xl active:scale-95 text-sm border border-amber-200"
               >
                 🚀 Hacerse Premium
               </button>
@@ -137,9 +151,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              {/* Cupo Intérprete */}
+              <div className="bg-white px-3.5 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[130px]">
+                <div className="flex items-center justify-between text-xs text-gray-500 font-bold mb-1">
+                  <span>🗣️ Intérprete</span>
+                  <span className="text-red-600 font-extrabold">{translationsLeft} frases</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, (translationsCountUsed / 7) * 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">de 7 al mes</p>
+              </div>
+
               {/* Cupo Live */}
-              <div className="bg-white px-4 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[150px]">
+              <div className="bg-white px-3.5 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[130px]">
                 <div className="flex items-center justify-between text-xs text-gray-500 font-bold mb-1">
                   <span>🎙️ Voz Live</span>
                   <span className="text-red-600 font-extrabold">{liveMinutesLeft} min</span>
@@ -154,7 +183,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
               </div>
 
               {/* Cupo Vision */}
-              <div className="bg-white px-4 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[150px]">
+              <div className="bg-white px-3.5 py-3 rounded-2xl border border-gray-200 shadow-sm flex-1 sm:flex-initial min-w-[130px]">
                 <div className="flex items-center justify-between text-xs text-gray-500 font-bold mb-1">
                   <span>📸 Vision IA</span>
                   <span className="text-red-600 font-extrabold">{visionLeft} fotos</span>
@@ -165,13 +194,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
                     style={{ width: `${Math.min(100, (visionCountUsed / 5) * 100)}%` }}
                   ></div>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1">de 5 fotos al mes</p>
+                <p className="text-[10px] text-gray-400 mt-1">de 5 al mes</p>
               </div>
 
               {/* Botón Upgrade */}
               <button
                 onClick={() => setShowPricing(true)}
-                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-black py-3.5 px-6 rounded-2xl transition-all shadow-lg active:scale-95 text-sm flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-black py-3 px-5 rounded-2xl transition-all shadow-lg active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-1.5"
               >
                 <span>Hacerse Premium</span>
                 <span>💎</span>
@@ -191,7 +220,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
                 Acceso Ilimitado Desbloqueado ✨
               </h3>
               <p className="text-xs text-gray-600">
-                30 horas de Live al mes, todos los acentos regionales, Vision ilimitada y cursos EFE completos.
+                Traducción simultánea ilimitada, 30h de Live, todos los acentos regionales, Vision ilimitada y cursos EFE.
               </p>
             </div>
           </div>
@@ -244,12 +273,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, liveMinutesUsed
       {/* Quick Access Tools */}
       <div className="mb-8">
         <h3 className="text-lg font-outfit font-bold text-gray-800 mb-4">Herramientas 🛠️</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {TOOLS.map(tool => (
             <button
               key={tool.id}
               onClick={() => onNavigate(tool.id)}
-              className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all text-left group"
+              className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all text-left group"
             >
               <span className="text-3xl mb-3 block group-hover:scale-110 transition-transform">{tool.icon}</span>
               <h4 className="font-bold text-gray-900 text-sm">{tool.name}</h4>

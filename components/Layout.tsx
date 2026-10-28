@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,14 +41,15 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
               <h1 className="text-2xl font-outfit font-bold text-gray-900">Profe Jemi ✨</h1>
             </div>
 
-            <nav className="hidden md:flex space-x-6">
-              <button onClick={() => onNavigate('home')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'home' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🏠 Dashboard</button>
-              <button onClick={() => onNavigate('chat')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'chat' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>💬 Tutor</button>
-              <button onClick={() => onNavigate('vision')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'vision' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>📸 Vision</button>
-              <button onClick={() => onNavigate('voice')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'voice' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎙️ Live</button>
-              <button onClick={() => onNavigate('courses')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'courses' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>📚 Cursos</button>
-              <button onClick={() => onNavigate('podcasts')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'podcasts' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎧 Podcasts</button>
-              {isAdmin && <button onClick={() => onNavigate('admin')} className={`px-3 py-2 text-sm font-bold transition-colors ${currentView === 'admin' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🛡️ Admin</button>}
+            <nav className="hidden md:flex space-x-4 lg:space-x-6">
+              <button onClick={() => onNavigate('home')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'home' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🏠 Dashboard</button>
+              <button onClick={() => onNavigate('interpreter')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'interpreter' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🗣️ Intérprete</button>
+              <button onClick={() => onNavigate('chat')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'chat' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>💬 Tutor</button>
+              <button onClick={() => onNavigate('vision')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'vision' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>📸 Vision</button>
+              <button onClick={() => onNavigate('voice')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'voice' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎙️ Live</button>
+              <button onClick={() => onNavigate('courses')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'courses' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>📚 Cursos</button>
+              <button onClick={() => onNavigate('podcasts')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'podcasts' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎧 Podcasts</button>
+              {isAdmin && <button onClick={() => onNavigate('admin')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'admin' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🛡️ Admin</button>}
             </nav>
 
             <div className="flex items-center space-x-4 relative">
@@ -72,11 +72,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
               {showMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-bold text-gray-900">{user.name}</p>
                       <p className="text-xs text-gray-400">{user.level} • {user.accent}</p>
                     </div>
+                    <button
+                      onClick={() => { setShowMenu(false); onNavigate('interpreter'); }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold transition-colors flex items-center gap-2 border-b border-gray-50 md:hidden"
+                    >
+                      🗣️ Intérprete en Vivo
+                    </button>
                     <button
                       onClick={() => { setShowMenu(false); onNavigate('profile'); }}
                       className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold transition-colors flex items-center gap-2 border-b border-gray-50"

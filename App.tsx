@@ -10,6 +10,7 @@ import LessonInterface from './components/LessonInterface';
 import PodcastInterface from './components/PodcastInterface';
 import ImageAnalyzer from './components/ImageAnalyzer';
 import ProfileSettings from './components/ProfileSettings';
+import LiveInterpreter from './components/LiveInterpreter';
 import Login from './components/Auth/Login';
 import SignUp from './components/Auth/SignUp';
 import ResetPassword from './components/Auth/ResetPassword';
@@ -18,7 +19,7 @@ import AdminRoute from './components/Auth/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import PricingModal from './components/Subscription/PricingModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { supabase, incrementLiveMinutes, incrementVisionUsage } from './services/supabase';
+import { supabase, incrementLiveMinutes, incrementVisionUsage, incrementTranslationUsage } from './services/supabase';
 import { User, SpanishLevel, Lesson } from './types';
 
 const LESSONS: Lesson[] = [
@@ -319,10 +320,15 @@ const MainApp: React.FC = () => {
     if (profile?.vision_count_used !== undefined) return profile.vision_count_used;
     return Number(localStorage.getItem(`profe_jemi_vision_count_${authUser?.id}`) || 0);
   });
+  const [translationsCountUsed, setTranslationsCountUsed] = useState<number>(() => {
+    if (profile?.translations_count_used !== undefined) return profile.translations_count_used;
+    return Number(localStorage.getItem(`profe_jemi_translations_count_${authUser?.id}`) || 0);
+  });
 
   useEffect(() => {
     if (profile?.live_minutes_used !== undefined) setLiveMinutesUsed(profile.live_minutes_used);
     if (profile?.vision_count_used !== undefined) setVisionCountUsed(profile.vision_count_used);
+    if (profile?.translations_count_used !== undefined) setTranslationsCountUsed(profile.translations_count_used);
   }, [profile]);
 
   const handleLiveMinutesAdded = async (minutes: number) => {
@@ -338,6 +344,14 @@ const MainApp: React.FC = () => {
     setVisionCountUsed(next);
     if (authUser) {
       await incrementVisionUsage(authUser.id, visionCountUsed);
+    }
+  };
+
+  const handleTranslationUsed = async () => {
+    const next = translationsCountUsed + 1;
+    setTranslationsCountUsed(next);
+    if (authUser) {
+      await incrementTranslationUsage(authUser.id, translationsCountUsed);
     }
   };
 
@@ -490,6 +504,7 @@ const MainApp: React.FC = () => {
           onNavigate={handleNavigate}
           liveMinutesUsed={liveMinutesUsed}
           visionCountUsed={visionCountUsed}
+          translationsCountUsed={translationsCountUsed}
         />
       )}
       {currentView === 'profile' && (
@@ -518,6 +533,15 @@ const MainApp: React.FC = () => {
           isPremium={isPremium}
           liveMinutesUsed={liveMinutesUsed}
           onLiveMinutesAdded={handleLiveMinutesAdded}
+          onOpenPricing={() => setShowPricing(true)}
+        />
+      )}
+      {currentView === 'interpreter' && (
+        <LiveInterpreter
+          user={user}
+          isPremium={isPremium}
+          translationsCountUsed={translationsCountUsed}
+          onIncrementTranslation={handleTranslationUsed}
           onOpenPricing={() => setShowPricing(true)}
         />
       )}

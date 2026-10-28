@@ -1,4 +1,3 @@
-
 export enum SpanishLevel {
   BASIC = 'Básico',
   INTERMEDIATE = 'Intermedio',
@@ -57,6 +56,7 @@ export interface UserProfile {
   trial_ends_at?: string;
   live_minutes_used?: number;
   vision_count_used?: number;
+  translations_count_used?: number;
   usage_reset_at?: string;
   stripe_customer_id: string | null;
   created_at: string;

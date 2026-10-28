@@ -103,3 +103,17 @@ export async function incrementVisionUsage(userId: string, currentCount: number)
     localStorage.setItem(`profe_jemi_vision_count_${userId}`, String(newTotal));
     return newTotal;
 }
+
+export async function incrementTranslationUsage(userId: string, currentCount: number): Promise<number> {
+    const newTotal = currentCount + 1;
+    try {
+        await supabase
+            .from('profiles')
+            .update({ translations_count_used: newTotal })
+            .eq('id', userId);
+    } catch (e) {
+        console.warn('Could not persist translations count to supabase, falling back to local storage', e);
+    }
+    localStorage.setItem(`profe_jemi_translations_count_${userId}`, String(newTotal));
+    return newTotal;
+}
