@@ -1,10 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2025-02-24.acacia' as any,
-});
-
 // Planes oficiales configurados
 const PRICE_MAP: Record<string, string> = {
   // Global (USD)
@@ -16,11 +12,38 @@ const PRICE_MAP: Record<string, string> = {
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Configurar cabeceras CORS
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { email, userId, priceId, planKey } = req.body;
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    console.error('Missing STRIPE_SECRET_KEY in environment variables');
+    return res.status(500).json({
+      statusCode: 500,
+      code: 'MISSING_STRIPE_KEY',
+      message: 'Falta configurar la variable STRIPE_SECRET_KEY en Vercel (Project Settings > Environment Variables).'
+    });
+  }
+
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: '2025-02-24.acacia' as any,
+  });
+
+  const { email, userId, priceId, planKey } = req.body || {};
 
   // Determinar el priceId adecuado
   let selectedPrice = priceId;
@@ -44,17 +67,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mode: 'subscription',
       success_url: `${req.headers.origin || 'https://app.hablemosenespanol.com'}/?success=true`,
       cancel_url: `${req.headers.origin || 'https://app.hablemosenespanol.com'}/?canceled=true`,
-      customer_email: email,
-      client_reference_id: userId,
+      customer_email: email || undefined,
+      client_reference_id: userId || undefined,
       metadata: {
         userId: userId || '',
         selectedPrice,
       },
     });
 
-    res.status(200).json({ url: session.url });
+    return res.status(200).json({ url: session.url });
   } catch (err: any) {
     console.error('Stripe Checkout Error:', err);
-    res.status(500).json({ statusCode: 500, message: err.message });
+    return res.status(500).json({ statusCode: 500, message: err.message });
   }
 }

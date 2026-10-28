@@ -2,17 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripeUrl = process.env.STRIPE_SECRET_KEY as string;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-const supabaseUrl = process.env.SUPABASE_URL as string;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
-
-const stripe = new Stripe(stripeUrl, {
-  apiVersion: '2025-02-24.acacia' as any,
-});
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 export const config = {
   api: {
     bodyParser: false,
@@ -33,6 +22,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).end('Method Not Allowed');
   }
 
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!stripeKey || !webhookSecret) {
+    console.error('Missing Stripe webhook configuration in environment variables.');
+    return res.status(500).json({ error: 'Missing Stripe webhook environment variables' });
+  }
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase configuration in environment variables.');
+    return res.status(500).json({ error: 'Missing Supabase environment variables' });
+  }
+
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: '2025-02-24.acacia' as any,
+  });
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   const payload = await getRawBody(req);
   const sig = req.headers['stripe-signature'] as string;
 
@@ -41,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     event = stripe.webhooks.constructEvent(payload, sig, webhookSecret);
   } catch (err: any) {
-    console.log(`⚠️  Webhook signature verification failed.`, err.message);
+    console.log(`⚠️ Webhook signature verification failed:`, err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -74,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
            const { error } = await supabase
             .from('profiles')
             .update({
-              subscription_status: 'inactive',
+              subscription_status: 'free',
               updated_at: new Date().toISOString()
             })
             .eq('subscription_id', subscription.id);
@@ -97,9 +107,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log(`Unhandled event type ${event.type}`);
     }
 
-    res.json({ received: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    return res.json({ received: true });
+  } catch (err: any) {
+    console.error('Webhook processing error:', err);
+    return res.status(500).json({ error: err.message });
   }
 }

@@ -102,16 +102,30 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, initialPla
                 }),
             });
 
-            const data = await response.json();
-            if (data.url) {
+            const textResponse = await response.text();
+            let data: any = null;
+            try {
+                data = JSON.parse(textResponse);
+            } catch (e) {
+                console.error('Non-JSON response from /api/checkout:', textResponse);
+            }
+
+            if (response.ok && data?.url) {
                 window.location.href = data.url;
+            } else if (data?.code === 'MISSING_STRIPE_KEY') {
+                alert(isBR 
+                    ? 'Atenção: Falta configurar a variável STRIPE_SECRET_KEY na Vercel (Project Settings > Environment Variables).' 
+                    : 'Attention: STRIPE_SECRET_KEY is missing in Vercel (Project Settings > Environment Variables).');
+            } else if (data?.message) {
+                alert((isBR ? 'Erro no pagamento: ' : 'Payment error: ') + data.message);
             } else {
-                console.error('Error creating checkout session:', data.message);
-                alert(isBR ? 'Erro ao iniciar o pagamento. Tente novamente.' : 'Error initiating checkout. Please try again.');
+                alert(isBR 
+                    ? 'Não foi possível iniciar o checkout. Verifique se a variável STRIPE_SECRET_KEY está configurada na Vercel.' 
+                    : 'Could not initiate checkout. Please verify STRIPE_SECRET_KEY in Vercel.');
             }
         } catch (error) {
             console.error('Network error:', error);
-            alert(isBR ? 'Erro de conexão.' : 'Connection error.');
+            alert(isBR ? 'Erro de conexão com o servidor de pagamento.' : 'Connection error with payment server.');
         } finally {
             setLoading(false);
         }
@@ -168,153 +182,147 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, initialPla
                     </div>
                 </div>
 
-                <div className="p-6 sm:p-8">
-                    {/* Selector Mensual / Anual */}
-                    <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-6 relative">
+                <div className="p-6 sm:p-8 space-y-6">
+                    {/* Selector Ciclo de Facturación (Anual vs Mensual) */}
+                    <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-2xl">
                         <button
                             type="button"
                             onClick={() => setBillingCycle('annual')}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all relative ${
+                            className={`py-2.5 px-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                                 billingCycle === 'annual'
                                     ? 'bg-white text-gray-900 shadow-md'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    : 'text-gray-500 hover:text-gray-900'
                             }`}
                         >
                             <span>{isBR ? 'Anual' : 'Annual'}</span>
-                            <span className="ml-1.5 bg-green-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded-md">
                                 -35%
                             </span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setBillingCycle('monthly')}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                            className={`py-2.5 px-3 rounded-xl font-bold text-sm transition-all ${
                                 billingCycle === 'monthly'
                                     ? 'bg-white text-gray-900 shadow-md'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    : 'text-gray-500 hover:text-gray-900'
                             }`}
                         >
                             {isBR ? 'Mensal' : 'Monthly'}
                         </button>
                     </div>
 
-                    {/* Precio destacado */}
-                    <div className="text-center mb-6">
+                    {/* Tarjeta de Precio Seleccionado */}
+                    <div className="border-2 border-red-500/20 bg-gradient-to-b from-red-50/50 to-white rounded-2xl p-5 relative">
                         {currentPricing.badge && (
-                            <span className="inline-block bg-amber-100 text-amber-800 text-[11px] font-black px-3 py-1 rounded-full mb-2 uppercase tracking-wide">
+                            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
                                 {currentPricing.badge}
                             </span>
                         )}
-                        <div className="flex justify-center items-baseline gap-1">
-                            <span className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">
-                                {currentPricing.display}
-                            </span>
-                            <span className="text-gray-500 text-sm font-semibold">{currentPricing.period}</span>
-                        </div>
-                        {currentPricing.equivalent && (
-                            <p className="text-xs sm:text-sm text-green-600 font-bold mt-1">
-                                {currentPricing.equivalent}
-                            </p>
-                        )}
-                    </div>
 
-                    {/* Lista comparativa de Beneficios */}
-                    <div className="space-y-3 mb-6 bg-red-50/50 p-4 rounded-2xl border border-red-100">
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🗣️</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? 'Intérprete em Tempo Real Ilimitado' : 'Unlimited Live Interpreter'}
-                                </strong>
-                                <p className="text-gray-500 text-[11px]">
-                                    {isBR ? 'Traduza conversas com gírias e sotaques locais (grátis: 7 frases)' : 'Real-time conversation with local idioms (free: 7 phrases)'}
+                        <div className="text-center pt-1">
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-4xl font-outfit font-black text-gray-900 tracking-tight">
+                                    {currentPricing.display}
+                                </span>
+                                <span className="text-gray-500 font-semibold text-sm">
+                                    {currentPricing.period}
+                                </span>
+                            </div>
+
+                            {currentPricing.equivalent && (
+                                <p className="text-xs font-bold text-emerald-600 mt-1">
+                                    {currentPricing.equivalent}
                                 </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🎙️</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? '30 Horas de Live por Mês' : '30 Hours Live Voice / Month'}
-                                </strong>
-                                <p className="text-gray-500 text-[11px]">
-                                    {isBR ? '(O plano gratuito tem apenas 15 min)' : '(Free plan is limited to 15 min)'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">📸</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? 'Visão IA Ilimitada' : 'Unlimited Vision AI'}
-                                </strong>
-                                <p className="text-gray-500 text-[11px]">
-                                    {isBR ? 'Envie quantas fotos quiser para aprender vocabulário' : 'Analyze any photo to learn contextual vocabulary'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🌎</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? 'Todos os Sotaques Disponíveis' : 'All Regional Accents Unlocked'}
-                                </strong>
-                                <p className="text-gray-500 text-[11px]">
-                                    Rioplatense, Mexicano, Ibérico, Colombiano, Chileno
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">📚</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? 'Todos os Cursos + EFE Especializados' : 'All Courses + Specialized EFE'}
-                                </strong>
-                                <p className="text-gray-500 text-[11px]">
-                                    Medicina, Negócios, Turismo e Direito
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <span className="bg-red-100 text-red-600 font-bold p-1 rounded-lg text-xs mt-0.5">🎧</span>
-                            <div className="text-xs sm:text-sm">
-                                <strong className="text-gray-900 font-bold">
-                                    {isBR ? 'Tutor IA 24/7 & Podcasts Completos' : '24/7 AI Tutor & Full Podcasts'}
-                                </strong>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Botón CTA */}
-                    <button
-                        onClick={handleSubscribe}
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-black py-4 px-6 rounded-2xl hover:from-red-700 hover:to-red-600 transition-all shadow-xl shadow-red-500/25 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2 text-sm sm:text-base"
-                    >
-                        {loading ? (
-                            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        ) : (
-                            <>
-                                <span>{currentPricing.ctaText}</span>
-                                <span>🚀</span>
-                            </>
-                        )}
-                    </button>
+                    {/* Beneficios Exclusivos Premium */}
+                    <div className="space-y-3">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            {isBR ? 'Tudo o que está incluído no Premium:' : 'Everything included with Premium:'}
+                        </p>
+                        <ul className="space-y-2.5 text-sm text-gray-700">
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? '30 Horas/mês de Conversação Live' : '30 Hours/mo of Live Voice'}</strong>{' '}
+                                    <span className="text-gray-500 text-xs">({isBR ? 'vs 15 min no free' : 'vs 15 min in free'})</span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? '🗣️ Intérprete em Tempo Real Ilimitado' : '🗣️ Unlimited Live Interpreter'}</strong>{' '}
+                                    <span className="text-gray-500 text-xs">({isBR ? 'vs 7 traduções/mês no free' : 'vs 7 uses/mo in free'})</span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? 'Vision IA Ilimitado' : 'Unlimited Vision AI'}</strong>{' '}
+                                    <span className="text-gray-500 text-xs">({isBR ? 'vs 5 análises no free' : 'vs 5 uses in free'})</span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? 'Todos os Sotaques Disponíveis' : 'All Regional Accents Available'}</strong>{' '}
+                                    <span className="text-gray-500 text-xs">({isBR ? 'Rioplatense, Mexicano, Ibérico, Colombiano, Chileno, Paraguaio' : 'Rioplatense, Mexican, Iberian, Colombian, Chilean, Paraguayan'})</span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? 'Todos os Cursos + EFE Especializados' : 'All Courses + Specialized ESP'}</strong>{' '}
+                                    <span className="text-gray-500 text-xs">({isBR ? 'Medicina, Negócios, Turismo e Direito' : 'Medical, Business, Tourism & Legal'})</span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                                    ✓
+                                </div>
+                                <span>
+                                    <strong>{isBR ? 'Tutor IA 24/7 & Podcasts Completos' : '24/7 AI Tutor & Full Podcasts'}</strong>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
 
-                    <div className="mt-4 text-center space-y-1">
-                        <p className="text-[11px] text-gray-400 flex items-center justify-center gap-1.5">
-                            <span>🔒</span> {isBR ? 'Pagamento 100% seguro via Stripe • Cancele quando quiser' : '100% secure payment via Stripe • Cancel anytime'}
+                    {/* Botón CTA Principal */}
+                    <div className="space-y-3 pt-2">
+                        <button
+                            onClick={handleSubscribe}
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-4 px-6 rounded-2xl shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    <span>{currentPricing.ctaText}</span>
+                                    <span>→</span>
+                                </>
+                            )}
+                        </button>
+
+                        <p className="text-center text-xs text-gray-600 flex items-center justify-center gap-1.5">
+                            <span>🔒</span>
+                            <span>{isBR ? 'Pagamento 100% seguro via Stripe • Cancele quando quiser' : '100% secure payment via Stripe • Cancel anytime'}</span>
                         </p>
                         {isBR && billingCycle === 'annual' && (
-                            <p className="text-[11px] text-gray-500 font-medium">
+                            <p className="text-center text-[11px] text-gray-600">
                                 Opção de parcelamento disponível no checkout do cartão.
                             </p>
                         )}
