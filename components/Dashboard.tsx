@@ -111,6 +111,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               Conversación Live 🎙️
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className="bg-black/50 backdrop-blur-md text-white border border-red-300/40 font-bold py-3 px-6 rounded-2xl hover:bg-black/70 transition-all active:scale-95 text-sm flex items-center gap-1.5 shadow-lg"
+              >
+                <span>🛡️</span> Panel Admin
+              </button>
+            )}
             {!isPremium && (
               <button
                 onClick={() => setShowPricing(true)}

@@ -646,7 +646,7 @@ const MainApp: React.FC = () => {
           </div>
         );
       })()}
-      {currentView === 'admin' && isAdmin && <AdminDashboard />}
+      {currentView === 'admin' && <AdminDashboard onBackToApp={() => handleNavigate('home')} />}
     </Layout>
   );
 };
@@ -746,7 +746,7 @@ const App: React.FC = () => {
           <Route path="/admin" element={
             <ProtectedRoute>
               <AdminRoute>
-                <AdminDashboard />
+                <AdminDashboard onBackToApp={() => window.location.href = '/'} />
               </AdminRoute>
             </ProtectedRoute>
           } />

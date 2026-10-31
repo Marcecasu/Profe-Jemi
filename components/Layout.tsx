@@ -49,7 +49,18 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
               <button onClick={() => onNavigate('voice')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'voice' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎙️ Live</button>
               <button onClick={() => onNavigate('courses')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'courses' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>📚 Cursos</button>
               <button onClick={() => onNavigate('podcasts')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'podcasts' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🎧 Podcasts</button>
-              {isAdmin && <button onClick={() => onNavigate('admin')} className={`px-2.5 py-2 text-sm font-bold transition-colors ${currentView === 'admin' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500 hover:text-gray-700'}`}>🛡️ Admin</button>}
+              {isAdmin && (
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all flex items-center gap-1.5 ${
+                    currentView === 'admin'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                  }`}
+                >
+                  🛡️ Admin
+                </button>
+              )}
             </nav>
 
             <div className="flex items-center space-x-4 relative">
@@ -83,6 +94,14 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentView
                     >
                       🗣️ Intérprete en Vivo
                     </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => { setShowMenu(false); onNavigate('admin'); }}
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-bold transition-colors flex items-center gap-2 border-b border-gray-50"
+                      >
+                        🛡️ Panel Admin
+                      </button>
+                    )}
                     <button
                       onClick={() => { setShowMenu(false); onNavigate('profile'); }}
                       className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold transition-colors flex items-center gap-2 border-b border-gray-50"

@@ -46,6 +46,26 @@ drop policy if exists "Users can update own profile." on public.profiles;
 create policy "Users can update own profile." on public.profiles
   for update using (auth.uid() = id);
 
+-- Permitir a administradores actualizar cualquier perfil (para gestionar suscripciones y cuotas)
+drop policy if exists "Admins can update all profiles." on public.profiles;
+create policy "Admins can update all profiles." on public.profiles
+  for update using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
+-- Permitir a administradores eliminar perfiles
+drop policy if exists "Admins can delete profiles." on public.profiles;
+create policy "Admins can delete profiles." on public.profiles
+  for delete using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
 -- 4. Función de creación automática de perfil al registrarse un usuario
 create or replace function public.handle_new_user()
 returns trigger as $$

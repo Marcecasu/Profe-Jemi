@@ -1,9 +1,8 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { isAdmin, loading } = useAuth();
+    const { loading } = useAuth();
 
     if (loading) {
         return (
@@ -13,10 +12,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         );
     }
 
-    if (!isAdmin) {
-        return <Navigate to="/" replace />;
-    }
-
+    // El componente AdminDashboard se encarga de mostrar la vista de validación/PIN o el panel completo
     return <>{children}</>;
 };
 
