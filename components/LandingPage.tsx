@@ -1,8 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 type Lang = 'pt' | 'es' | 'en';
+
+const TESTIMONIAL_CARDS = [
+  { id: 1, img: '/testimonials/testimonio_1.jpg', name: 'Stephani Diniz', role: 'Brasil • WhatsApp' },
+  { id: 2, img: '/testimonials/testimonio_2.jpg', name: 'Valtuir Provenci', role: 'Estudante A2 • Brasil' },
+  { id: 3, img: '/testimonials/testimonio_3.jpg', name: 'Brenda Gerena', role: 'Estudante B1 • EUA' },
+  { id: 4, img: '/testimonials/testimonio_4.jpg', name: 'Cristina Makino', role: 'Estudante B2 • Alemanha' },
+  { id: 5, img: '/testimonials/testimonio_5.jpg', name: 'Cristopher', role: 'Estudante C1 • EUA' },
+  { id: 6, img: '/testimonials/testimonio_6.jpg', name: 'Estefani', role: 'Estudante B1 • Brasil' },
+  { id: 7, img: '/testimonials/testimonio_7.jpg', name: 'Gabriela Guardia', role: 'Brasil • WhatsApp' },
+  { id: 8, img: '/testimonials/testimonio_8.jpg', name: 'Heitor Souza', role: 'Estudante A2 • China' },
+  { id: 9, img: '/testimonials/testimonio_9.jpg', name: 'Miguel', role: 'Estudante B1 • Brasil' },
+  { id: 10, img: '/testimonials/testimonio_10.jpg', name: 'Sabrina', role: 'Estudante B2 • Brasil' },
+  { id: 11, img: '/testimonials/testimonio_11.jpg', name: 'Sophie', role: 'Estudante A1 • Inglaterra' },
+  { id: 12, img: '/testimonials/testimonio_12.jpg', name: 'Patricia Bovo', role: 'Estudante A2 • Brasil' },
+  { id: 13, img: '/testimonials/testimonio_13.jpg', name: 'Kaitlin', role: 'Estudante A1 • EUA' }
+];
 
 const TRANSLATIONS = {
   pt: {
@@ -24,15 +40,15 @@ const TRANSLATIONS = {
       ctaPrimary: 'Começar Agora Grátis ➔',
       ctaSecondary: 'Conheça a Profe Jemima ↓',
       riskFree: '100% Grátis para começar • Sem cartão de crédito • 15 min de voz + Intérprete inclusos todo mês',
-      ratingText: 'Nota 4.9/5 por mais de 1.500 alunos particulares e online',
-      jemiTitle: 'Professora Jemima Leguizamón',
-      jemiBadge: 'Nativa Uruguaia • Vivendo no Brasil desde 2001',
-      jemiCert: 'Certificada ELE & EFE (Instituto Cervantes / Tía Tula)',
+      ratingText: 'Nota 4.9/5 avaliada por centenas de alunos particulares e online',
+      jemiTitle: 'Profe Jemi AI ✨',
+      jemiBadge: 'Tutora Nativa com IA • 24/7 em Tempo Real',
+      jemiCert: 'Método Oficial de Jemima Leguizamón (Certificada Cervantes / Tía Tula)',
       quote: '"Diga adeus ao portunhol. Aqui você fala espanhol de verdade desde o primeiro minuto."'
     },
     stats: [
       { number: '17+', label: 'Anos de experiência no ensino de espanhol' },
-      { number: '1.500+', label: 'Alunos que destravaram a fluência' },
+      { number: 'Centenas', label: 'De alunos que destravaram a fluência' },
       { number: '20+', label: 'Países e sotaques hispanos cobertos' },
       { number: '24/7', label: 'Disponibilidade para praticar no seu ritmo' }
     ],
@@ -150,31 +166,10 @@ const TRANSLATIONS = {
       certBadge: 'Certificação Oficial Instituto Cervantes / Tía Tula'
     },
     testimonials: {
-      badge: 'Resultados Reais ⭐',
+      badge: 'Resultados Reais & Comprovados ⭐',
       title: 'O Que Dizem os Nossos Alunos',
-      subtitle: 'Veja como quem começou do zero ou travado no portunhol conquistou a liberdade de falar.',
-      list: [
-        {
-          name: 'Stephane M.',
-          role: 'Executiva de Expansão • São Paulo',
-          text: 'Eu participava de reuniões com equipes da América Latina e ficava muda com medo de falar errado. A metodologia da Jemima e a prática diária de voz mudaram tudo: hoje conduzo apresentações inteiras em espanhol sem suar frio!'
-        },
-        {
-          name: 'Patricia Bovo',
-          role: 'Estudante de Medicina • Argentina',
-          text: 'Mudei para Rosário sem falar quase nada. O Intérprete e as conversas em espanhol Rioplatense me salvaram na faculdade e no dia a dia. A Profe Jemi entende perfeitamente a mente do brasileiro.'
-        },
-        {
-          name: 'Amanda Silveira',
-          role: 'Viajante & Designer • Florianópolis',
-          text: 'Fiz um mochilão de 40 dias pelo Chile e Peru. Pratiquei 15 minutos por dia antes de viajar e foi a melhor coisa que fiz. Cheguei lá me virando nos restaurantes, hotéis e passeios sem passar nenhum aperto!'
-        },
-        {
-          name: 'Mônica Dantas',
-          role: 'Professora de Língua Espanhola',
-          text: 'Como colega de profissão, recomendo de olhos fechados o trabalho da Jemima. A combinação da didática humana dela com a inteligência artificial da Profe Jemi é uma revolução para quem quer aprender rápido.'
-        }
-      ]
+      subtitle: 'Depoimentos reais e mensagens diretas de centenas de estudantes que transformaram o seu espanhol com o método da Professora Jemima.',
+      carouselHint: '← Arraste para os lados ou clique em qualquer depoimento para ampliar →'
     },
     pricing: {
       badge: 'Investimento Acessível 💎',
@@ -264,7 +259,7 @@ const TRANSLATIONS = {
     finalCta: {
       badge: 'Sua Hora de Falar Espanhol é Agora 🚀',
       title: 'Pronto Para Falar Espanhol de Verdade Sem Travar?',
-      subtitle: 'Junte-se a mais de 1.500 alunos que perderam a vergonha do portunhol e conquistaram a liberdade de se comunicar em qualquer lugar do mundo.',
+      subtitle: 'Junte-se a centenas de alunos que perderam a vergonha do portunhol e conquistaram a liberdade de se comunicar em qualquer lugar do mundo.',
       button: 'Começar Agora Gratuitamente ➔',
       guarantee: 'Acesso imediato • Sem cartão de crédito • Cancele quando quiser'
     },
@@ -295,15 +290,15 @@ const TRANSLATIONS = {
       ctaPrimary: 'Empieza a Hablar Gratis ➔',
       ctaSecondary: 'Conoce a la Profe Jemima ↓',
       riskFree: '100% Gratis para comenzar • Sin tarjeta de crédito • 15 min de voz + Intérprete incluidos cada mes',
-      ratingText: 'Calificación 4.9/5 por más de 1.500 alumnos particulares y online',
-      jemiTitle: 'Profesora Jemima Leguizamón',
-      jemiBadge: 'Nativa Uruguaya • Bilingüe Español / Portugués',
-      jemiCert: 'Certificada ELE & EFE (Instituto Cervantes / Tía Tula)',
+      ratingText: 'Calificación 4.9/5 por cientos de alumnos particulares y online',
+      jemiTitle: 'Profe Jemi AI ✨',
+      jemiBadge: 'Tutora Nativa con IA • 24/7 en Tiempo Real',
+      jemiCert: 'Método Oficial de Jemima Leguizamón (Certificada Cervantes / Tía Tula)',
       quote: '"Dile adiós al miedo de hablar. Aquí practicas español real desde el primer minuto."'
     },
     stats: [
       { number: '17+', label: 'Años enseñando español como lengua extranjera' },
-      { number: '1.500+', label: 'Alumnos que han alcanzado la fluidez' },
+      { number: 'Cientos', label: 'De alumnos que han alcanzado la fluidez' },
       { number: '20+', label: 'Países y variantes dialectales cubiertas' },
       { number: '24/7', label: 'Disponibilidad para practicar a tu propio ritmo' }
     ],
@@ -421,31 +416,10 @@ const TRANSLATIONS = {
       certBadge: 'Acreditación Oficial Instituto Cervantes / Tía Tula'
     },
     testimonials: {
-      badge: 'Historias Reales ⭐',
+      badge: 'Historias Reales & Comprobadas ⭐',
       title: 'Lo Que Dicen Nuestros Estudiantes',
-      subtitle: 'Personas reales que superaron el miedo y transformaron su español.',
-      list: [
-        {
-          name: 'Stephane M.',
-          role: 'Ejecutiva Internacional • São Paulo',
-          text: 'Participaba en reuniones con equipos de toda Latinoamérica y me quedaba en silencio por vergüenza. La metodología de Jemima y la práctica de voz me dieron la seguridad que necesitaba para liderar en español.'
-        },
-        {
-          name: 'Patricia Bovo',
-          role: 'Estudiante de Medicina • Argentina',
-          text: 'Llegué a estudiar medicina en Rosario sin hablar casi nada. El intérprete y la práctica con el acento rioplatense me salvaron en el hospital y en el supermercado.'
-        },
-        {
-          name: 'Amanda Silveira',
-          role: 'Diseñadora & Viajera • Florianópolis',
-          text: 'Entrené 15 minutos al día antes de hacer un viaje por Chile y Perú. Llegué allá comunicándome con soltura en hoteles, taxis y restaurantes sin ningún estrés.'
-        },
-        {
-          name: 'Mônica Dantas',
-          role: 'Profesora Colega de Español',
-          text: 'Recomiendo totalmente el trabajo de Jemima. La combinación de su calidez pedagógica con la inteligencia artificial es la forma más rápida y amena de volverse fluido.'
-        }
-      ]
+      subtitle: 'Capturas y testimonios reales de cientos de alumnos que transformaron su español con el método de la Profesora Jemima.',
+      carouselHint: '← Desliza hacia los lados o haz clic en cualquier testimonio para ampliar →'
     },
     pricing: {
       badge: 'Precios Claros 💎',
@@ -531,7 +505,7 @@ const TRANSLATIONS = {
     finalCta: {
       badge: 'Tu Momento de Hablar es Hoy 🚀',
       title: '¿Listo Para Hablar Español con Orgullo?',
-      subtitle: 'Únete a más de 1.500 alumnos que dejaron atrás el miedo y hoy se comunican con naturalidad en el mundo hispano.',
+      subtitle: 'Únete a cientos de alumnos que dejaron atrás el miedo y hoy se comunican con naturalidad en el mundo hispano.',
       button: 'Empieza a Hablar Gratis Ahora ➔',
       guarantee: 'Acceso inmediato • Sin tarjeta de crédito • Cancela cuando quieras'
     },
@@ -562,15 +536,15 @@ const TRANSLATIONS = {
       ctaPrimary: 'Start Speaking Free ➔',
       ctaSecondary: 'Meet Profe Jemima ↓',
       riskFree: '100% Free to start • No credit card required • 15 min live voice + Interpreter included every month',
-      ratingText: 'Rated 4.9/5 by 1,500+ private and online students',
-      jemiTitle: 'Professor Jemima Leguizamón',
-      jemiBadge: 'Native Uruguayan • Bilingual Spanish / Portuguese',
-      jemiCert: 'Certified ELE & EFE (Instituto Cervantes / Tía Tula)',
+      ratingText: 'Rated 4.9/5 by hundreds of private and online students',
+      jemiTitle: 'Profe Jemi AI ✨',
+      jemiBadge: '24/7 Native AI Voice Tutor',
+      jemiCert: 'Official method by Jemima Leguizamón (Certified Cervantes / Tía Tula)',
       quote: '"Stop memorizing word lists. Start speaking real Spanish from minute one."'
     },
     stats: [
       { number: '17+', label: 'Years teaching Spanish as a foreign language' },
-      { number: '1,500+', label: 'Students guided to real fluency' },
+      { number: 'Hundreds', label: 'Of students guided to real fluency' },
       { number: '20+', label: 'Spanish-speaking countries and accents covered' },
       { number: '24/7', label: 'Availability to practice on your own schedule' }
     ],
@@ -688,31 +662,10 @@ const TRANSLATIONS = {
       certBadge: 'Official Instituto Cervantes / Tía Tula Accreditation'
     },
     testimonials: {
-      badge: 'Real Stories ⭐',
+      badge: 'Real & Verified Stories ⭐',
       title: 'What Our Students Are Saying',
-      subtitle: 'Real people who conquered hesitation and found their voice in Spanish.',
-      list: [
-        {
-          name: 'Stephane M.',
-          role: 'Expansion Lead • International',
-          text: 'I used to freeze during video calls with Latin American partners. Practicing daily voice conversations with Profe Jemi gave me the exact vocabulary and confidence I needed to lead meetings effortlessly.'
-        },
-        {
-          name: 'Patricia Bovo',
-          role: 'Medical Student • Relocated to Argentina',
-          text: 'I arrived in Rosario barely speaking basic Spanish. The live interpreter and Rioplatense dialect practice saved me in hospital rounds and daily grocery errands.'
-        },
-        {
-          name: 'Amanda Silveira',
-          role: 'Designer & Traveler',
-          text: 'I practiced 15 minutes a day for a month before a trip across Chile and Peru. I navigated transport, hotels, and tours with zero awkwardness. Best decision ever!'
-        },
-        {
-          name: 'Mônica Dantas',
-          role: 'Spanish Language Instructor',
-          text: 'As a fellow language teacher, I wholeheartedly praise Jemima’s methodology. Bringing her pedagogy into an interactive voice AI makes fluent Spanish accessible to anyone.'
-        }
-      ]
+      subtitle: 'Real messages and feedback from hundreds of students who transformed their spoken Spanish with Professor Jemima.',
+      carouselHint: '← Swipe horizontally or click on any testimonial card to view full resolution →'
     },
     pricing: {
       badge: 'Transparent Pricing 💎',
@@ -798,7 +751,7 @@ const TRANSLATIONS = {
     finalCta: {
       badge: 'Your Time To Speak Is Today 🚀',
       title: 'Ready To Speak Real Spanish With Pride?',
-      subtitle: 'Join 1,500+ students who conquered hesitation and unlocked fluent communication across the Spanish-speaking world.',
+      subtitle: 'Join hundreds of students who conquered hesitation and unlocked fluent communication across the Spanish-speaking world.',
       button: 'Start Speaking For Free Now ➔',
       guarantee: 'Instant access • No credit card required • Cancel anytime'
     },
@@ -815,6 +768,7 @@ const TRANSLATIONS = {
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Detección automática del idioma del navegador
   const [lang, setLang] = useState<Lang>(() => {
@@ -841,12 +795,44 @@ const LandingPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Si cambia el idioma manualmente a pt, sugerir moneda BRL
     if (lang === 'pt') setIsBR(true);
     else if (lang === 'en') setIsBR(false);
   }, [lang]);
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Movimiento automático del carrusel de testimonios
+  useEffect(() => {
+    if (isCarouselPaused) return;
+
+    const interval = setInterval(() => {
+      if (carouselRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+        // Si llega al final del scroll, reiniciar suavemente
+        if (scrollLeft + clientWidth >= scrollWidth - 30) {
+          carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          carouselRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+        }
+      }
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [isCarouselPaused]);
+
+  const scrollPrev = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
 
   const t = TRANSLATIONS[lang];
 
@@ -956,7 +942,7 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* ══════════════════════════════════════════════ */}
-      {/* 2. HERO SECTION (Above-the-fold formula)     */}
+      {/* 2. HERO SECTION (Usa Imagen 1 con cara IA)   */}
       {/* ══════════════════════════════════════════════ */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
         {/* Glow de fondo decorativo */}
@@ -971,7 +957,7 @@ const LandingPage: React.FC = () => {
                 <span>{t.hero.badge}</span>
               </div>
 
-              {/* Titular Principal (6-12 palabras según regla conversion) */}
+              {/* Titular Principal */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-outfit font-black tracking-tight text-white leading-[1.1]">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-400 to-amber-300">
                   {t.hero.titleHighlight}
@@ -979,7 +965,7 @@ const LandingPage: React.FC = () => {
                 {t.hero.titleRest}
               </h1>
 
-              {/* Subheadline (15-25 palabras) */}
+              {/* Subheadline */}
               <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
                 {t.hero.subtitle}
               </p>
@@ -1001,7 +987,7 @@ const LandingPage: React.FC = () => {
                 </a>
               </div>
 
-              {/* Micro-copia que elimina el riesgo (Risk Reversal) */}
+              {/* Micro-copia que elimina el riesgo */}
               <p className="text-xs text-slate-400 flex items-center justify-center lg:justify-start gap-2 pt-1">
                 <span>🔒</span>
                 <span>{t.hero.riskFree}</span>
@@ -1011,10 +997,10 @@ const LandingPage: React.FC = () => {
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 border-t border-slate-800/80">
                 <div className="flex -space-x-2">
                   <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-red-600 flex items-center justify-center font-bold text-xs text-white">S</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-amber-600 flex items-center justify-center font-bold text-xs text-white">P</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-emerald-600 flex items-center justify-center font-bold text-xs text-white">A</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-purple-600 flex items-center justify-center font-bold text-xs text-white">M</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-blue-600 flex items-center justify-center font-bold text-xs text-white">H</div>
+                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-amber-600 flex items-center justify-center font-bold text-xs text-white">V</div>
+                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-emerald-600 flex items-center justify-center font-bold text-xs text-white">B</div>
+                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-purple-600 flex items-center justify-center font-bold text-xs text-white">C</div>
+                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-blue-600 flex items-center justify-center font-bold text-xs text-white">M</div>
                 </div>
                 <div className="text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-1 text-amber-400 text-sm">
@@ -1027,18 +1013,18 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Columna Derecha: Foto de la Profesora Jemima + UI Mockup Interactivo */}
+            {/* Columna Derecha: Imagen 1 (Cara Profe Jemi con mitad IA) */}
             <div className="lg:col-span-5 relative flex justify-center">
               <div className="relative w-full max-w-md">
                 {/* Marco de resplandor */}
                 <div className="absolute -inset-1.5 bg-gradient-to-tr from-red-600 via-orange-500 to-amber-400 rounded-3xl blur-lg opacity-40"></div>
 
                 <div className="relative bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl">
-                  {/* Foto de la Profesora Jemima proporcionada por el usuario */}
+                  {/* Foto 1: Cara mitad humana, mitad IA */}
                   <img
-                    src="/jemima_landing.jpg"
-                    alt="Profesora Jemima Leguizamón - Hablemos en Español"
-                    className="w-full h-[420px] object-cover object-top"
+                    src="/jemima_ai_hero.jpg"
+                    alt="Profe Jemi AI - Tutora de Voz Inteligente"
+                    className="w-full h-[420px] object-cover object-center"
                   />
 
                   {/* Tarjeta flotante inferior */}
@@ -1049,7 +1035,7 @@ const LandingPage: React.FC = () => {
                       </span>
                       <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Online 24/7
+                        {t.hero.jemiBadge}
                       </span>
                     </div>
 
@@ -1110,7 +1096,6 @@ const LandingPage: React.FC = () => {
       {/* ══════════════════════════════════════════════ */}
       <section id="beneficios" className="py-20 lg:py-28 bg-slate-900 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header de la sección */}
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full">
               {t.problem.badge}
@@ -1123,7 +1108,6 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          {/* 3 Tarjetas de dolor (Turista, Mudanza, Trabajo) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             {t.problem.cards.map((card, i) => (
               <div key={i} className="bg-slate-800/60 rounded-3xl p-8 border border-slate-700/80 hover:border-red-500/40 transition-all shadow-lg flex flex-col justify-between">
@@ -1277,17 +1261,18 @@ const LandingPage: React.FC = () => {
 
       {/* ══════════════════════════════════════════════ */}
       {/* 7. SOBRE LA PROFESORA JEMIMA LEGUIZAMÓN      */}
+      {/* (Mantiene la foto real y natural de Jemima)   */}
       {/* ══════════════════════════════════════════════ */}
       <section id="profesora" className="py-20 lg:py-28 bg-slate-950 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-br from-slate-900 to-slate-850 rounded-3xl p-8 sm:p-14 border border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* Foto Real de la Profesora */}
+            {/* Foto Real de la Profesora (Jemima Landing) */}
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative">
                 <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-3xl overflow-hidden border-4 border-red-500/40 shadow-2xl">
                   <img
                     src="/jemima_landing.jpg"
-                    alt="Profesora Jemima Leguizamón"
+                    alt="Profesora Jemima Leguizamón - Hablemos en Español"
                     className="w-full h-full object-cover object-top"
                   />
                 </div>
@@ -1332,11 +1317,11 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* ══════════════════════════════════════════════ */}
-      {/* 8. TESTIMONIOS REALES (Social Proof)         */}
+      {/* 8. TESTIMONIOS REALES - CARRUSEL AUTOMÁTICO  */}
       {/* ══════════════════════════════════════════════ */}
-      <section id="depoimentos" className="py-20 lg:py-28 bg-slate-900">
+      <section id="depoimentos" className="py-20 lg:py-28 bg-slate-900 overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="text-center max-w-3xl mx-auto mb-10 space-y-4">
             <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full">
               {t.testimonials.badge}
             </span>
@@ -1346,26 +1331,57 @@ const LandingPage: React.FC = () => {
             <p className="text-base text-slate-300">
               {t.testimonials.subtitle}
             </p>
+            <p className="text-xs text-slate-500 font-medium">
+              {t.testimonials.carouselHint}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {t.testimonials.list.map((item, i) => (
-              <div key={i} className="bg-slate-800/80 rounded-3xl p-8 border border-slate-700/80 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-1 text-amber-400 text-sm mb-4">
-                    ★★★★★
-                  </div>
-                  <p className="text-sm sm:text-base text-slate-200 leading-relaxed italic mb-6">
-                    "{item.text}"
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 border-t border-slate-700/60 pt-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-orange-500 flex items-center justify-center font-bold text-sm text-white">
-                    {item.name[0]}
-                  </div>
-                  <div>
-                    <p className="font-bold text-white text-sm">{item.name}</p>
-                    <p className="text-xs text-slate-400">{item.role}</p>
+          {/* Controles de Navegación del Carrusel */}
+          <div className="flex items-center justify-end gap-3 mb-4 max-w-7xl mx-auto px-2">
+            <button
+              onClick={scrollPrev}
+              className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
+              aria-label="Anterior"
+            >
+              ❮
+            </button>
+            <button
+              onClick={scrollNext}
+              className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
+              aria-label="Siguiente"
+            >
+              ❯
+            </button>
+          </div>
+
+          {/* Carrusel con Scroll Suave y Movimiento Automático */}
+          <div
+            ref={carouselRef}
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+            onTouchStart={() => setIsCarouselPaused(true)}
+            onTouchEnd={() => setIsCarouselPaused(false)}
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex gap-6 overflow-x-auto pb-8 pt-2 scroll-smooth cursor-grab active:cursor-grabbing snap-x snap-mandatory"
+          >
+            {TESTIMONIAL_CARDS.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => setSelectedImage(item.img)}
+                className="shrink-0 w-[260px] sm:w-[290px] rounded-3xl overflow-hidden bg-slate-800/90 border border-slate-700/80 hover:border-amber-400/60 shadow-xl transition-all duration-300 hover:-translate-y-1 group snap-center cursor-pointer"
+              >
+                {/* Imagen del testimonio */}
+                <div className="relative overflow-hidden bg-slate-950">
+                  <img
+                    src={item.img}
+                    alt={`Depoimento de ${item.name}`}
+                    className="w-full h-auto max-h-[580px] object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                    <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                      <span>🔍</span> Clique para ampliar
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1373,6 +1389,31 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Modal Lightbox para Ampliar Testimonios */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-sm sm:max-w-md w-full bg-slate-900 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 bg-black/60 hover:bg-black/90 text-white rounded-full flex items-center justify-center font-bold text-sm transition-colors"
+            >
+              ✕
+            </button>
+            <img
+              src={selectedImage}
+              alt="Depoimento ampliado"
+              className="w-full max-h-[85vh] object-contain bg-slate-950"
+            />
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════ */}
       {/* 9. TABLA DE PRECIOS REGIONALIZADOS           */}
@@ -1603,7 +1644,7 @@ const LandingPage: React.FC = () => {
           <div className="text-center md:text-left space-y-2 max-w-md">
             <div className="flex items-center justify-center md:justify-start gap-2 text-white font-bold font-outfit text-base">
               <span>Profe Jemi ✨</span>
-              <span className="text-xs text-slate-400 font-normal">por Profesora Jemima Leguizamón</span>
+              <span className="text-xs text-slate-400 font-normal">por Professora Jemima Leguizamón</span>
             </div>
             <p className="text-slate-500 leading-relaxed">
               {t.footer.about}
