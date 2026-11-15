@@ -18,6 +18,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import PricingModal from './components/Subscription/PricingModal';
+import LandingPage from './components/LandingPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { supabase, incrementLiveMinutes, incrementVisionUsage, incrementTranslationUsage } from './services/supabase';
 import { User, SpanishLevel, Lesson } from './types';
@@ -735,11 +736,30 @@ const LessonCard: React.FC<{
   );
 };
 
+const HomeRoute: React.FC = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-red-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <MainApp />;
+  }
+
+  return <LandingPage />;
+};
+
 const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
         <Routes>
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -750,11 +770,12 @@ const App: React.FC = () => {
               </AdminRoute>
             </ProtectedRoute>
           } />
-          <Route path="/" element={
+          <Route path="/app" element={
             <ProtectedRoute>
               <MainApp />
             </ProtectedRoute>
           } />
+          <Route path="/" element={<HomeRoute />} />
         </Routes>
       </AuthProvider>
     </Router>
